@@ -65,9 +65,6 @@ function createTile(position, args){
 		.addComponent("2D, Canvas, TilePhysics, Color"+(args?", "+args:""))
 		.attr({x:position.x,y:position.y,w:50,h:50})
 		.color("#733D1A")
-		.onHit("PLAYER",function(){
-			
-		})
 }
 
 function createPlayer(position, args){
