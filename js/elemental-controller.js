@@ -35,8 +35,8 @@ Crafty.c("PhysicsEnabled",{
 			.bind("EnterFrame",function(){
 				if(this._physicsModel == undefined) return;
 				//@TODO: Fix the rotation from the physics to the graphics
-				//this._physicsModel.m_rotation = 0;
-				this.rotation = this._physicsModel.m_rotation*180/Math.PI;
+				this._physicsModel.m_rotation = 0;
+				//this.rotation = this._physicsModel.m_rotation*180/Math.PI;
 				this.x = this._physicsModel.m_position.x  - this.w/2;
 				this.y = this._physicsModel.m_position.y  - this.h/2;
 			});
@@ -47,7 +47,7 @@ function createSimpleRigidBody(world,x,y,w,h,density){
 	var boxSd = new b2BoxDef();
 	boxSd.density = density==undefined?1:density; 
 	boxSd.restitution = 0.2;
-	boxSd.friction = 0.8;
+	boxSd.friction = 1;
 	boxSd.extents.Set(w/2, h/2);
 	var boxBd = new b2BodyDef();
 	boxBd.AddShape(boxSd);
@@ -57,6 +57,24 @@ function createSimpleRigidBody(world,x,y,w,h,density){
 	var r = Crafty.e("Canvas, PhysicsEnabled")
 		.attr({w:w,h:h})
 		.physicsModel(boxr);
+		
+	return r;
+}
+
+function createSimpleBall(world,x,y,r,density){
+	var circleSd = new b2CircleDef();
+	circleSd.density = density==undefined?1:density;
+	circleSd.radius = r/2;
+	circleSd.restitution = 0.2;
+	circleSd.friction = 1;
+	var circleBd = new b2BodyDef();
+	circleBd.AddShape(circleSd);
+	circleBd.position.Set(x,y);
+	var circleBody = world.CreateBody(circleBd);
+	
+	var r = Crafty.e("Canvas, PhysicsEnabled")
+		.attr({w:r,h:r})
+		.physicsModel(circleBody);
 		
 	return r;
 }
@@ -74,7 +92,7 @@ window.onload = function(){
 	
 	console.log(world.world);
 	
-	createSimpleRigidBody(world.world,50,50,40,40,0.1)
+	createSimpleBall(world.world,50,50,40,40,0.1)
 		.addComponent("Keyboard, Color")
 		.color("#0af")
 		.bind("KeyDown",function(e){
@@ -83,13 +101,14 @@ window.onload = function(){
 		})
 		.bind("KeyUp",function(e){
 			this.keys[e.key] = false;
+			if(e.key == 68){
+				
+			}
 		})
 		.bind("EnterFrame",function(){
 			if(!this.keys) this.keys = [];
 			if(this.keys[68]){
-				//this._physicsModel.ApplyForce(new b2Vec2(0,-500),new b2Vec2(20,20));
-				//this._physicsModel.ApplyTorque(450);
-				this._physicsModel.ApplyForce(new b2Vec2(-100,-300),new b2Vec2(0,0));
+				
 			}
 		})
 	createSimpleRigidBody(world.world,0,200,800,40,0)
