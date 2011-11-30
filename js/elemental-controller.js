@@ -35,7 +35,7 @@ Crafty.c("PhysicsEnabled",{
 			.bind("EnterFrame",function(){
 				if(this._physicsModel == undefined) return;
 				//@TODO: Fix the rotation from the physics to the graphics
-				this._physicsModel.m_rotation = 0;
+				//this._physicsModel.m_rotation = 0;
 				//this.rotation = this._physicsModel.m_rotation*180/Math.PI;
 				this.x = this._physicsModel.m_position.x  - this.w/2;
 				this.y = this._physicsModel.m_position.y  - this.h/2;
@@ -43,15 +43,16 @@ Crafty.c("PhysicsEnabled",{
 	}
 })
 
-function createSimpleRigidBody(world,x,y,w,h,density){
+function createSimpleRigidBody(world,x,y,w,h,rotation,density){
 	var boxSd = new b2BoxDef();
 	boxSd.density = density==undefined?1:density; 
 	boxSd.restitution = 0.2;
-	boxSd.friction = 1;
+	boxSd.friction = 1000;
 	boxSd.extents.Set(w/2, h/2);
 	var boxBd = new b2BodyDef();
 	boxBd.AddShape(boxSd);
 	boxBd.position.Set(x,y);
+	boxBd.rotation = rotation;
 	var boxr = world.CreateBody(boxBd);
 	
 	var r = Crafty.e("Canvas, PhysicsEnabled")
@@ -66,7 +67,7 @@ function createSimpleBall(world,x,y,r,density){
 	circleSd.density = density==undefined?1:density;
 	circleSd.radius = r/2;
 	circleSd.restitution = 0.2;
-	circleSd.friction = 1;
+	circleSd.friction = 1000;
 	var circleBd = new b2BodyDef();
 	circleBd.AddShape(circleSd);
 	circleBd.position.Set(x,y);
@@ -76,6 +77,7 @@ function createSimpleBall(world,x,y,r,density){
 		.attr({w:r,h:r})
 		.physicsModel(circleBody);
 		
+	console.log(circleBody);
 	return r;
 }
 
@@ -90,9 +92,7 @@ window.onload = function(){
 	//Create the World;
 	var world = Crafty.e("Box2DWorld");
 	
-	console.log(world.world);
-	
-	createSimpleBall(world.world,50,50,40,40,0.1)
+	createSimpleBall(world.world,50,50,40,40,20)
 		.addComponent("Keyboard, Color")
 		.color("#0af")
 		.bind("KeyDown",function(e){
@@ -102,16 +102,20 @@ window.onload = function(){
 		.bind("KeyUp",function(e){
 			this.keys[e.key] = false;
 			if(e.key == 68){
-				
+				this._physicsModel.m_linearVelocity.x = 0;
 			}
 		})
 		.bind("EnterFrame",function(){
 			if(!this.keys) this.keys = [];
 			if(this.keys[68]){
-				
+				this._physicsModel.m_linearVelocity.x = 130;
 			}
 		})
-	createSimpleRigidBody(world.world,0,200,800,40,0)
+	createSimpleRigidBody(world.world,0,200,800,40,0.6,0)
+		.addComponent("Color")
+		.color("#af0")
+		
+	createSimpleRigidBody(world.world,600,350,800,40,-0.3,0)
 		.addComponent("Color")
 		.color("#af0")
 		
