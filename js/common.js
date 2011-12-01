@@ -1,9 +1,9 @@
 //http://www.box2dflash.org/docs/2.1a/reference/
 
 function createStaticBox(world,x,y,w,h,density,friction,restitution,rotation){
-	density = density || 1.0;
-	friction = friction || 0.5;
-	restitution = restitution || 0.2;
+	density = density==undefined?1.0:density;
+	friction = friction==undefined?0.5:friction;
+	restitution = restitution==undefined?0.2:restitution;
 	rotation = rotation || 0;
 	
 	var fixDef = new b2FixtureDef;
@@ -32,9 +32,9 @@ function createStaticCircle(){
 }
 
 function createDynamicCircle(world,x,y,r,density,friction,restitution){
-	density = density || 1.0;
-	friction = friction || 0.5;
-	restitution = restitution || 0.2;
+	density = density==undefined?1.0:density;
+	friction = friction==undefined?0.5:friction;
+	restitution = restitution==undefined?0.2:restitution;
 		
 	var fixDef = new b2FixtureDef;
 	fixDef.density = density;
@@ -46,7 +46,7 @@ function createDynamicCircle(world,x,y,r,density,friction,restitution){
 	fixDef.shape = new b2CircleShape(pTOm(r/2));
 	bodyDef.position.x = pTOm(x);
 	bodyDef.position.y = pTOm(y);
-	//bodyDef.fixedRotation = true;
+	bodyDef.fixedRotation = true;
 	    
 	var r = world.CreateBody(bodyDef);
 	r.CreateFixture(fixDef);

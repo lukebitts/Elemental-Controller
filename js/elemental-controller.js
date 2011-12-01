@@ -95,24 +95,34 @@ window.onload = function(){
 	
 	//Basic fixture and body declarations
 	Crafty.e("Canvas, Color, Box2DPhysics")
-		.physicsModel(createStaticBox(world,110,500,200,50,null,null,null,0.3))
+		.physicsModel(createStaticBox(world,110,500,200,50,null,null,0,0.3))
 		.color("#faf")
 		.attr({w:200,h:50})
 		
 	Crafty.e("Canvas, Color, Box2DPhysics")
-		.physicsModel(createStaticBox(world,310,500,300,50,null,null,null,-0.3))
+		.physicsModel(createStaticBox(world,310,510,300,50,null,null,0,-0.0))
 		.color("#faf")
 		.attr({w:300,h:50})
     
     Crafty.sprite(40,"img/ball.png",{b:[0,0]});
     Crafty.e("Canvas, Color, Box2DPhysics, Keyboard")
-    	.physicsModel(createDynamicCircle(world,40,40,40))
+    	.physicsModel(createDynamicCircle(world,40,40,40,null,null,0))
     	.color("#faa")
 		.attr({w:40,h:40})
-		.bind("KeyDown",function(){
-			var mod = this._box2dPhysicsModel;
-			mod.ApplyImpulse(new b2Vec2(2,0),new b2Vec2(0,0));
+		.bind("KeyUp",function(e){
+			this.keys[e.key] = false;
 		})
+		.bind("KeyDown",function(e){
+			this.keys[e.key] = true;
+			if(e.key == 87)
+				this._box2dPhysicsModel.ApplyImpulse(new b2Vec2(0,-10),new b2Vec2(0,0));
+		})
+		.bind("EntreFrame",function(){
+			var mod = this._box2dPhysicsModel;
+			if(this.keys[68])
+				mod.ApplyImpulse(new b2Vec2(0,0),new b2Vec2(0,0));
+		})
+		.keys=[];
     
 
 }
