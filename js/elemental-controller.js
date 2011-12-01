@@ -3,6 +3,8 @@ function pTOm(n){
 }
 
 var b2Vec2 = Box2D.Common.Math.b2Vec2,
+	b2Transform = Box2D.Common.Math.b2Transform,
+	b2Mat22 = Box2D.Common.Math.b2Mat22;
 	b2AABB = Box2D.Collision.b2AABB,
 	b2BodyDef = Box2D.Dynamics.b2BodyDef,
 	b2Body = Box2D.Dynamics.b2Body,	
@@ -25,11 +27,11 @@ Crafty.c("Box2DWorld",{
 			this._world = world.world();
 			return;
 		}
-		var gravity = new b2Vec2(0,10);
-		var allowSleep = true;
+		var gravity = new b2Vec2(0,30);
+		var allowSleep = false;
 		this._world = new b2World(gravity,allowSleep);
 		this.bind("EnterFrame",function(){
-			//console.log();
+
 			this._world.Step(1/60, 10, 10);
             this._world.DrawDebugData();
             this._world.ClearForces();
@@ -94,35 +96,92 @@ window.onload = function(){
 	var world = Crafty.e("Box2DWorld").debug(debug).world();
 	
 	//Basic fixture and body declarations
-	Crafty.e("Canvas, Color, Box2DPhysics")
-		.physicsModel(createStaticBox(world,110,500,200,50,null,null,0,0.3))
+	Crafty.e("Canvas, Color, Box2DPhysics, FLOOR, Collision")
+		.physicsModel(createStaticBox(world,110,430,200,50,null,0.1,0,null))
 		.color("#faf")
 		.attr({w:200,h:50})
 		
-	Crafty.e("Canvas, Color, Box2DPhysics")
-		.physicsModel(createStaticBox(world,310,510,300,50,null,null,0,-0.0))
+	Crafty.e("Canvas, Color, Box2DPhysics, FLOOR, Collision")
+		.physicsModel(createStaticBox(world,310,510,300,50,null,0.1,0,null))
 		.color("#faf")
 		.attr({w:300,h:50})
+		
+	Crafty.e("Canvas, Color, Box2DPhysics, FLOOR, Collision")
+		.physicsModel(createDynamicBox(world,310,510,60,60,1,1,null))
+		.color("#faf")
+		.attr({w:60,h:60})
     
     Crafty.sprite(40,"img/ball.png",{b:[0,0]});
-    Crafty.e("Canvas, Color, Box2DPhysics, Keyboard")
-    	.physicsModel(createDynamicCircle(world,40,40,40,null,null,0))
+    Crafty.e("Canvas, Color, Box2DPhysics, Keyboard, Collision")
+    	.physicsModel(createPlayer(world,40,40,40,40,null,null,0.2))
     	.color("#faa")
-		.attr({w:40,h:40})
+		.attr({w:41,h:41})
 		.bind("KeyUp",function(e){
 			this.keys[e.key] = false;
 		})
 		.bind("KeyDown",function(e){
+			console.log(e.key);
 			this.keys[e.key] = true;
-			if(e.key == 87)
-				this._box2dPhysicsModel.ApplyImpulse(new b2Vec2(0,-10),new b2Vec2(0,0));
 		})
-		.bind("EntreFrame",function(){
+		.bind("EnterFrame",function(e){
+			var MAX_VELOCITY = 4.0;
 			var mod = this._box2dPhysicsModel;
-			if(this.keys[68])
-				mod.ApplyImpulse(new b2Vec2(0,0),new b2Vec2(0,0));
+			var vel = mod.GetLinearVelocity();
+			var pos = mod.GetPosition();
+			
+			mod.SetAngle(0);
+			
+			if(Math.abs(vel.x) > MAX_VELOCITY){
+				vel.x = Math.signum(vel.x) * MAX_VELOCITY;
+				mod.SetLinearVelocity(new b2Vec2(vel.x, vel.y));
+			}
+			if(!this.keys[68]){
+				vel.x*=0.9;
+				mod.SetLinearVelocity(new b2Vec2(vel.x, vel.y));
+			}
+			else{
+				//bla
+			}
+			
+			if(this.hit("FLOOR"))
+				this.onGround = true;
+			else
+				this.onGround = false;
+			
+			if(!this.onGround){
+				mod.GetFixtureList().SetFriction(0.0);
+			}
+			else{
+				if(!this.keys[68]){
+					mod.GetFixtureList().SetFriction(100.0);
+				}
+				else{
+					mod.GetFixtureList().SetFriction(0.2);
+				}
+			}
+			//console.log(mod.GetFixtureList().GetFriction());
+			if(this.keys[65] && vel.x > -MAX_VELOCITY){
+				mod.ApplyImpulse(new b2Vec2(-2, 0), new b2Vec2(pos.x, pos.y));
+			}
+			if(this.keys[68] && vel.x < MAX_VELOCITY){
+				mod.ApplyImpulse(new b2Vec2(2, 0), new b2Vec2(pos.x, pos.y));
+			}
+			
+			if(this.keys[87]){
+				//lets jump
+				if(this.onGround){
+					this.onGround = false;
+					mod.SetLinearVelocity(new b2Vec2(vel.x, 0));
+					var tpos = new b2Vec2(pos.x, pos.y + 0.01);
+					var trot = new b2Mat22(new b2Vec2(0,0),new b2Vec2(0,0));
+					mod.SetTransform(new b2Transform(tpos, trot));
+					mod.ApplyImpulse(new b2Vec2(0, 300), new b2Vec2(pos.x, pos.y));
+				}
+			}
+			
 		})
 		.keys=[];
-    
-
+}
+Math.signum = function(n){
+	return !n?0:n>0?1:-1;
 }
