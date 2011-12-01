@@ -1,125 +1,118 @@
+function pTOm(n){
+	return n/30;
+}
+
+var b2Vec2 = Box2D.Common.Math.b2Vec2,
+	b2AABB = Box2D.Collision.b2AABB,
+	b2BodyDef = Box2D.Dynamics.b2BodyDef,
+	b2Body = Box2D.Dynamics.b2Body,	
+	b2FixtureDef = Box2D.Dynamics.b2FixtureDef,	
+	b2Fixture = Box2D.Dynamics.b2Fixture,	
+	b2World = Box2D.Dynamics.b2World,	
+	b2MassData = Box2D.Collision.Shapes.b2MassData,	
+	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape,	
+	b2CircleShape = Box2D.Collision.Shapes.b2CircleShape,	
+	b2DebugDraw = Box2D.Dynamics.b2DebugDraw,  
+	b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef;
+
 Crafty.c("Box2DWorld",{
-	debugging:true,
-	world:undefined,
+	_world:undefined,
+	_debug:false,
 	init:function(){
-		this.requires("2D, Canvas")
-		var worldAABB = new b2AABB();
-		worldAABB.minVertex.Set(0, 0);
-		worldAABB.maxVertex.Set(800, 600);
-		var gravity = new b2Vec2(0, 300);
-		this.world = new b2World(worldAABB, gravity, true);
+		world = Crafty(Crafty("Box2DWorld")[0]);
+		if(world.world() != undefined){
+			//we can't have more than one world at a time
+			this._world = world.world();
+			return;
+		}
+		var gravity = new b2Vec2(0,10);
+		var allowSleep = true;
+		this._world = new b2World(gravity,allowSleep);
 		this.bind("EnterFrame",function(){
-			var timeStep = 1.0/60;
-			var iteration = 1;
-			this.world.Step(timeStep, iteration);
+			//console.log();
+			this._world.Step(1/60, 10, 10);
+            this._world.DrawDebugData();
+            this._world.ClearForces();
 		})
+	},
+	debug:function(option){
+		this._debug = option;
+		if(option){
+			var debugDraw = new b2DebugDraw();
+			var ctx = document.getElementById("cr-stage2").getContext('2d');
+			debugDraw.SetSprite(ctx);
+			debugDraw.SetDrawScale(30.0);
+			debugDraw.SetFillAlpha(0.5);
+			debugDraw.SetLineThickness(1.0);
+			debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+			this._world.SetDebugDraw(debugDraw);
+		}
+		else {
+			this._world.SetDebugDraw(null);
+		}
+		return this;
+	},
+	world:function(){
+		return this._world;
 	}
 });
 
-Crafty.c("PhysicsModel",{
-	_physicsModel:undefined,
-	_world:Crafty(Crafty("Box2DWorld")[0]).world,
-	physicsModel:function(obj){
-		this._physicsModel = obj;
-		this.trigger("PhysicsModelChange");
+Crafty.c("Box2DPhysics",{
+	_box2dPhysicsModel:undefined,
+	init:function(){
+		this.requires("2D")
+			.bind("EnterFrame",function(){
+				if(!this._box2dPhysicsModel) return;
+				this._origin = {x:this.w/2,y:this.h/2};
+				this.rotation = this._box2dPhysicsModel.GetAngle() * 180/Math.PI;
+				this.x = this._box2dPhysicsModel.GetPosition().x*30 - this.w / 2;
+				this.y = this._box2dPhysicsModel.GetPosition().y*30 - this.h / 2;
+			})
+	},
+	physicsModel:function(model){
+		this._box2dPhysicsModel = model;
 		return this;
 	}
-});
-
-Crafty.c("PhysicsEnabled",{
-	init:function(){
-		this.requires("2D, PhysicsModel")
-			.bind("PhysicsModelChange",function(){
-				//console.log("Modelo mudado");
-			})
-			.bind("EnterFrame",function(){
-				if(this._physicsModel == undefined) return;
-				//@TODO: Fix the rotation from the physics to the graphics
-				//this._physicsModel.m_rotation = 0;
-				//this.rotation = this._physicsModel.m_rotation*180/Math.PI;
-				this.x = this._physicsModel.m_position.x  - this.w/2;
-				this.y = this._physicsModel.m_position.y  - this.h/2;
-			});
-	}
 })
-
-function createSimpleRigidBody(world,x,y,w,h,rotation,density){
-	var boxSd = new b2BoxDef();
-	boxSd.density = density==undefined?1:density; 
-	boxSd.restitution = 0.2;
-	boxSd.friction = 1000;
-	boxSd.extents.Set(w/2, h/2);
-	var boxBd = new b2BodyDef();
-	boxBd.AddShape(boxSd);
-	boxBd.position.Set(x,y);
-	boxBd.rotation = rotation;
-	var boxr = world.CreateBody(boxBd);
-	
-	var r = Crafty.e("Canvas, PhysicsEnabled")
-		.attr({w:w,h:h})
-		.physicsModel(boxr);
-		
-	return r;
-}
-
-function createSimpleBall(world,x,y,r,density){
-	var circleSd = new b2CircleDef();
-	circleSd.density = density==undefined?1:density;
-	circleSd.radius = r/2;
-	circleSd.restitution = 0.2;
-	circleSd.friction = 1000;
-	var circleBd = new b2BodyDef();
-	circleBd.AddShape(circleSd);
-	circleBd.position.Set(x,y);
-	var circleBody = world.CreateBody(circleBd);
-	
-	var r = Crafty.e("Canvas, PhysicsEnabled")
-		.attr({w:r,h:r})
-		.physicsModel(circleBody);
-		
-	console.log(circleBody);
-	return r;
-}
 
 window.onload = function(){
 	Crafty.init(800,600);
 	Crafty.canvas.init();
 	
+	//debug rendering in another canvas
+	canvas2 = document.getElementById("cr-stage2");
+	canvas2.width = 800;
+	canvas2.height = 600;
+
 	Crafty.e("2D, Canvas, Color")
 		.attr({w:800,h:600})
-		.color("#000");
+		.color("#0af");
 	
-	//Create the World;
-	var world = Crafty.e("Box2DWorld");
+	//We have to create a physics world if we want to control the debug
+	//without hassle
+	var debug = true;
+	var world = Crafty.e("Box2DWorld").debug(debug).world();
 	
-	createSimpleBall(world.world,50,50,40,40,20)
-		.addComponent("Keyboard, Color")
-		.color("#0af")
-		.bind("KeyDown",function(e){
-			console.log(e.key);
-			this.keys[e.key] = true;
-		})
-		.bind("KeyUp",function(e){
-			this.keys[e.key] = false;
-			if(e.key == 68){
-				this._physicsModel.m_linearVelocity.x = 0;
-			}
-		})
-		.bind("EnterFrame",function(){
-			if(!this.keys) this.keys = [];
-			if(this.keys[68]){
-				this._physicsModel.m_linearVelocity.x = 130;
-			}
-		})
-	createSimpleRigidBody(world.world,0,200,800,40,0.6,0)
-		.addComponent("Color")
-		.color("#af0")
+	//Basic fixture and body declarations
+	Crafty.e("Canvas, Color, Box2DPhysics")
+		.physicsModel(createStaticBox(world,110,500,200,50,null,null,null,0.3))
+		.color("#faf")
+		.attr({w:200,h:50})
 		
-	createSimpleRigidBody(world.world,600,350,800,40,-0.3,0)
-		.addComponent("Color")
-		.color("#af0")
-		
-	setInterval(function(){
-		drawWorld(world.world,Crafty.canvas.context);
-	},1);
+	Crafty.e("Canvas, Color, Box2DPhysics")
+		.physicsModel(createStaticBox(world,310,500,300,50,null,null,null,-0.3))
+		.color("#faf")
+		.attr({w:300,h:50})
+    
+    Crafty.sprite(40,"img/ball.png",{b:[0,0]});
+    Crafty.e("Canvas, Color, Box2DPhysics, Keyboard")
+    	.physicsModel(createDynamicCircle(world,40,40,40))
+    	.color("#faa")
+		.attr({w:40,h:40})
+		.bind("KeyDown",function(){
+			var mod = this._box2dPhysicsModel;
+			mod.ApplyImpulse(new b2Vec2(2,0),new b2Vec2(0,0));
+		})
+    
+
 }
