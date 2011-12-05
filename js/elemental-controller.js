@@ -1,137 +1,277 @@
-function $(msg){
-	console.log(msg);
-}
+var
+b2Vec2 = Box2D.Common.Math.b2Vec2,
+b2Transform = Box2D.Common.Math.b2Transform,
+b2Mat22 = Box2D.Common.Math.b2Mat22,
+b2AABB = Box2D.Collision.b2AABB,
+b2BodyDef = Box2D.Dynamics.b2BodyDef,
+b2Body = Box2D.Dynamics.b2Body,	
+b2FixtureDef = Box2D.Dynamics.b2FixtureDef,	
+b2Fixture = Box2D.Dynamics.b2Fixture,	
+b2World = Box2D.Dynamics.b2World,	
+b2MassData = Box2D.Collision.Shapes.b2MassData,	
+b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape,	
+b2CircleShape = Box2D.Collision.Shapes.b2CircleShape,	
+b2DebugDraw = Box2D.Dynamics.b2DebugDraw,  
+b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef;
 
-Crafty.c("TilePhysics",{
+Crafty.c("b2dWorld",{
+	_world:undefined,
+	_timestep:1/24,
 	init:function(){
-		this.requires("2D, Collision")
-			.onHit("PLAYER",function(){
-			//$("hitou");
+		world = Crafty(Crafty("b2dWorld")[0]);
+		if(world._world != undefined){
+			//we can't have more than one world at a time
+			this._world = world.world();
+			return;
+		}
+		//we set the world
+		var gravity = new b2Vec2(0,10);
+		var allowSleep = false;
+		this._world = new b2World(gravity, allowSleep);
+		this._world.drawScale = 30;
+		
+		//we set the debug data
+		var debugDraw = new b2DebugDraw();
+		var ctx = $('#canvas')[0].getContext('2d');
+		debugDraw.SetSprite(ctx);
+		debugDraw.SetDrawScale(this._world.drawScale);
+		debugDraw.SetFillAlpha(0.5);
+		debugDraw.SetLineThickness(1.0);
+		debugDraw.SetFlags(
+			b2DebugDraw.e_shapeBit | 
+			b2DebugDraw.e_jointBit |
+			b2DebugDraw.e_aabbBit |
+			b2DebugDraw.e_centerOfMassBit |
+			b2DebugDraw.e_pairBit |
+			b2DebugDraw.e_controllerBit
+			);
+		this._world.SetDebugDraw(debugDraw);
+		
+		//we set the contact listeners
+		var contactListener = new Box2D.Dynamics.b2ContactListener;
+		contactListener.BeginContact = function(contact) {
+			var eA, eB, _ref, _ref2;
+			eA = (_ref = contact.GetFixtureA().GetBody().userData) != null ? _ref.b2d_entity : void 0;
+			eB = (_ref2 = contact.GetFixtureB().GetBody().userData) != null ? _ref2.b2d_entity : void 0;
+			if (eA && eB) {
+				if (typeof eA._onContact === 'function') {
+					eA._onContact(eB);
+				}
+				if (typeof eB._onContact === 'function') {
+					eB._onContact(eA);
+				}
+			}
+		};
+		contactListener.EndContact = function(contact) {
+			var eA, eB, _ref, _ref2;
+			eA = (_ref = contact.GetFixtureA().GetBody().userData) != null ? _ref.b2d_entity : void 0;
+			eB = (_ref2 = contact.GetFixtureB().GetBody().userData) != null ? _ref2.b2d_entity : void 0;
+			if (eA && eB) {
+				if (typeof eA._onContactEnd === 'function') {
+					eA._onContactEnd(eB);
+				}
+				if (typeof eB._onContactEnd === 'function') {
+					eB._onContactEnd(eA);
+				}
+			}
+		}
+		this._world.SetContactListener(contactListener);
+		
+		//and finally the events
+		this.bind("EnterFrame",function(){
+			console.log(this._timestep);
+			this._world.Step(this._timestep, 10, 10);
+            this._world.DrawDebugData();
+            this._world.ClearForces();
+		});
+	},
+	world:function(){
+		return this._world;
+	}
+});
+
+Crafty.c('b2dObject',{
+	_b2de:undefined,
+	body:undefined,
+	onContact:undefined,
+	init:function(){
+		this.requires('b2dWorld');
+	},
+	b2d:function(args){
+		var x = this.x != null ? this.x : (args.x != null ? args.x : 0);
+		var y = this.y != null ? this.y : (args.y != null ? args.y : 0);
+		//@TODO: Gotta fix this damn not knowing if x,y,w or h were set
+		var param = {
+			//mandatory parameters
+			world: this._world,
+			body_type: args.body_type,
+			position: new b2Vec2(x,y),
+			crafty_entity: this
+		}
+		for(i in args){
+			//optional parameters
+			if(param[i] == undefined)
+				param[i] = args[i];
+		}
+		this._b2de = new B2DEntity(param);
+		this._b2de.contactListen('crafty',this);
+		this._b2de.contactEndListen('crafty',this);
+		this.body = this._b2de.body;
+		this.bind("EnterFrame",function(){
+			var angle, position;
+			position = this.body.GetPosition();
+			angle = this.body.GetAngle()*180/Math.PI;
+
+			this.rotation = angle;
+			this.attr({
+				x: (position.x*this._world.drawScale),
+				y: (position.y*this._world.drawScale)
+			});
 		})
+		.bind("Remove",function(){
+			var destroyBody = function(world,body){
+				world.DestroyBody(body);
+			}
+			setTimeout(destroyBody,0,this._world,this.body);
+		})
+		return this;
 	}
-})
+});
 
-Crafty.c("CharacterPhysics",{
-	gravity:9.8,
-	force:{x:0,y:0},
-	floor:false,
+Crafty.c("AlphaOnTouch",{
+	_flag:undefined,
+	_touchObj:undefined,
 	init:function(){
-		this.requires("2D, Collision")
-			.bind("EnterFrame",function(){
-				this.force.y += this.gravity/10;
-				this.force.y = this.floor?0:this.force.y;
-				this.force.x *= 0.9;
-				this.force.x = this.force.x<0.2&&this.force.x>-0.2?0:this.force.x;
-				this.x += this.force.x;
-				this.y += this.force.y;
-				if(!this.hit("TILE")) this.floor = false;
-			})
-			.onHit("TILE",function(e){
-				this.floor = true;
-				for(i in e){
-					var dir = []; //Where it collided = TOP, BOT, LEF, RIG, TOPLEF, TOPRIG, BOTLEF, BOTRIG
-					var from = undefined; //Direction before collision = TOPBOT, LEFRIG
-					var obj = e[i].obj;
-					
-					/*if(this.x <= obj.x) dir = "LEF";
-					if(this.x+this.w >= obj.x+obj.w) dir = "RIG";
-					
-					if(this.y <= obj.y) dir = "TOP";
-					if(this.y+this.h >= obj.y+obj.h) dir = "BOT";*/
-					
-					if(this.force.x > 0) dir.x = "LEF";
-					if(this.force.x < 0) dir.x = "RIG";
-					if(this.force.x == 0) dir.x = false;
-					
-					if(this.force.y > 0) dir.y = "TOP";
-					if(this.force.y < 0) dir.y = "BOT";
-					if(this.force.y == 0) dir.x = false;
-					
-					
-					//$(dir);
-					
-					//if(!dir.x){
-						if(dir.y == "TOP"){
-							this.force.y = 0;
-							this.y = obj.y - this.h;
-						}
-						if(dir.y == "BOT"){
-							this.force.y = 0;
-							this.y = obj.y + obj.h;
-						}
-					//}
-					if(!dir.y){
-						if(dir.x == "LEF"){
-							this.force.x = 0;
-							this.x = obj.x - this.w;
-						}
-						if(dir.x == "RIG"){
-							this.force.x = 0;
-							this.x = obj.x + obj.w;
-						}
-					}
-					
-				}
-				/*var obj = e[0].obj;
-				this.force.y = 0;
-				this.y = obj.y - this.h;*/
-				
-			})
-	}
-})
-
-Crafty.c("PlayerControl",{
-	keys:[],
-	init:function(){
-		this.requires("CharacterPhysics, Keyboard")
-			.bind("KeyDown",function(e){
-				this.keys[e.key] = true;
-			})
-			.bind("KeyUp",function(e){
-				this.keys[e.key] = false;
-				if(e.key == 68 && this.floor)
-					this.force.x = 0.5;
-				if(e.key == 65 && this.floor)
-					this.force.x = -0.5;
-			})
-			.bind("EnterFrame",function(){
-				if(this.keys[68])
-					if(this.force.x < 5)
-						this.force.x += 0.5;
-				if(this.keys[65])
-					if(this.force.x > -5)
-						this.force.x -= 0.5;
-				if(this.keys[87] && this.floor){
-					this.floor = false;
-					this.force.y = -13;
+		this.requires('b2dObject')
+			.bind("Contact",function(e){
+				var obj = e.body.userData.crafty_entity;
+				if(obj.has(this._flag)){
+					this.alpha = 0.5;
+					this._touchObj = obj;
 				}
 			})
+			.bind("ContactEnd",function(e){
+				var obj = e.body.userData.crafty_entity;
+				if(obj == this._touchObj){
+					this.alpha = 1;
+					this._touchObj = undefined;
+				}
+			})
+	},
+	flag:function(s){
+		this._flag = s;
 	}
+});
+
+$(document).mousemove(function(e){
+	msg(e.clientX,e.clientY);
 })
 
-function createTile(position, args){
-	return Crafty.e("TILE")
-		.addComponent("2D, Canvas, TilePhysics, Color"+(args?", "+args:""))
-		.attr({x:position.x,y:position.y,w:50,h:50})
-		.color("#733D1A")
-}
-
-function createPlayer(position, args){
-	return Crafty.e("PLAYER")
-		.addComponent("2D, Canvas, CharacterPhysics, PlayerControl, Color"+(args?", "+args:""))
-		.attr({x:position.x,y:position.y,w:10,h:10})
-		.color("#733D1A")
-}
-
-window.onload = function(){
+$(document).ready(function(){
+	//We initialize the basic Crafty Canvas 
 	Crafty.init(800,600);
 	Crafty.canvas.init();
 	
-	for(var i = 0;i<10; i++){
-		createTile({x:100+50*i,y:500},"DIRT");
+	//And our physics debug canvas
+	$('#canvas')[0].width = 800;
+	$('#canvas')[0].height = 600;
+	
+	//we should create a world, just to be sure we have the right pointer
+	// since every b2d entity will also have a pointer to this world
+	var w = Crafty.e('b2dWorld');
+	var world = w.world();
+	
+	b = Crafty.e("PLAYER, 2D, Canvas, Color, b2dObject, Keyboard")
+		.attr({x:40,y:40,w:40,h:50})
+		.color("#0af")
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			bullet:true,
+			fixedRotation:true,
+			objects:[{
+				w:40,
+				h:20,
+				//offY:20,
+				restitution:0,
+				density:1
+			},{
+				type:"circle",
+				radius:15,
+				restitution:0,
+				offY:20,
+				density:1
+			},{
+				type:"circle",
+				radius:15,
+				restitution:0,
+				offY:20,
+				offX:33,
+				density:1
+			}]
+		})
+		.bind("KeyDown",function(e){
+			//console.log(e.key);
+			if(e.key == 87){
+				this.body.ApplyImpulse(new b2Vec2(0,-12),this.body.GetWorldCenter())
+			}
+			if(e.key == 68){
+				this.body.ApplyImpulse(new b2Vec2(5,0),this.body.GetWorldCenter())
+			}
+			if(e.key == 65){
+				this.body.ApplyImpulse(new b2Vec2(-5,0),this.body.GetWorldCenter())
+			}
+		});
+		
+	//Crafty.viewport.follow(b,0,0);
+	
+	for(var i = 0;i < 8;i++){
+		Crafty.e("2D, Canvas, Color, b2dObject")
+			.attr({x:80*i,y:540-(25*i)+(i%2==0?25:0),w:80,h:50})
+			.color("#0a0")
+			.b2d({
+				body_type:b2Body.b2_staticBody,
+				angle:0.0,
+				objects:[{
+					w:80,
+					h:50,
+					restitution:0
+				}]
+			});
 	}
-	createTile({x:300,y:450},"DIRT");
 	
-	
-	createPlayer({x:360,y:440});
-}
+	Crafty.e("2D, Canvas, Color, b2dObject")
+		.attr({x:200,y:400,w:30,h:30})
+		.color("#0ff")
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			objects:[{
+				type:"circle",
+				radius:30,
+				restitution:0.5
+			}]
+		})
+		
+	Crafty.e("2D, Canvas, Color, b2dObject, AlphaOnTouch, CRATE")
+		.attr({x:400,y:200,w:30,h:30})
+		.color("#0af")
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			objects:[{
+				w:30,
+				h:30,
+				density:2,
+				restitution:0
+			}]
+		})
+		.flag("PLAYER");
+});
+
+$(window).blur(function(){
+	Crafty.pause();
+});
+
+$(window).focus(function(){
+	Crafty.pause();
+});
+
+
