@@ -3435,10 +3435,10 @@ Crafty.c("Sprite", {
 								 co.y, //y position on sprite
 								 co.w, //width on sprite
 								 co.h, //height on sprite
-								 Math.floor(pos._x), //x position on canvas
-								 Math.floor(pos._y), //y position on canvas
-								 Math.floor(pos._w), //width on canvas
-								 Math.floor(pos._h) //height on canvas
+								 pos._x, //x position on canvas
+								 pos._y, //y position on canvas
+								 pos._w, //width on canvas
+								 pos._h //height on canvas
 				);
 			} else if(e.type === "DOM") {
 				this._element.style.background = "url('" + this.__image + "') no-repeat -" + co.x + "px -" + co.y + "px";
@@ -3672,21 +3672,12 @@ Crafty.extend({
 			closest,
 			q,
 			i = 0, l,
+			pos = Crafty.DOM.translate(e.clientX, e.clientY),
 			x, y,
-			pos = {},
 			dupes = {},
 			tar = e.target?e.target:e.srcElement,
 			type = e.type;
-
-		if(type === "touchstart" || type === "touchmove" || type === "touchend"){
-			//pos = Crafty.DOM.translate(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-			pos.x = e.changedTouches[0].clientX,
-			pos.y = e.changedTouches[0].clientY;
-		}
-		else {
-			pos = Crafty.DOM.translate(e.clientX, e.clientY);
-		}
-		
+			
 		if(type === "touchstart") type = "mousedown";
 		else if(type === "touchmove") type = "mousemove";
 		else if(type === "touchend") type = "mouseup";
@@ -3770,7 +3761,6 @@ Crafty.extend({
 		}
 		
 		if (type === "mousemove") {
-			if(this.over) this.over.trigger("MouseMove", e);
 			this.lastEvent = e;
 		}
 	},
@@ -4845,7 +4835,7 @@ Crafty.DrawManager = (function() {
 			
 			q = Crafty.map.search(rect);
 			l = q.length;
-
+			
 			ctx.clearRect(rect._x, rect._y, rect._w, rect._h);
 			
 			q.sort(function(a,b) { return a._global - b._global; });
@@ -5431,4 +5421,3 @@ Crafty.extend({
 });
 
 })(Crafty,window,window.document);
-

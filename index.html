@@ -1,31 +1,42 @@
-<!DOCTYPE html>
-<html>
-	<head>
+<!DOCTYPE HTML>
+	<head>	
+		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+		<!--<script type="text/javascript" src="http://craftyjs.com/release/0.4.4/crafty-min.js"></script>-->
+		<script type="text/javascript" src="http://s3.amazonaws.com/craftyjs/crafty-SNAPSHOT.js"></script>
+		<script type="text/javascript" src="js/box2dweb.js"></script> 
+		<script type="text/javascript" src="js/b2entity.js"></script> 
+		<script type="text/javascript" src="js/elemental-controller.js"></script> 
+		<title>Test</title> 
+		<style> 
+		body, html
+		{
+			margin:0;
+			padding: 0;
+		}
+		#cr-stage
+		{ 
+			border: 1px solid black;
+			float: left;
+		}
+		#canvas
+		{
+			border: 1px solid black;
+			float: left;
+		}
+		</style>
 		<script type="text/javascript">
-			function log(){
-				if(console)
-					console.log(log.arguments);
-
+			function msg(){
+				var r = "Console: ";
+				for(i in msg.arguments){
+					r+= msg.arguments[i] + " ";
+				}
+				$("#console")[0].innerHTML = r;
 			}
 		</script>
-		<title>Elemental Controller</title>
-	    <script src="js/Box2dWeb-2.1.a.3.min.js"></script>
-		<script src="js/crafty.js"></script>
-		<script src="js/common.js"></script>
-		<script src="js/elemental-controller.js"></script>
-		<style type="text/css">
-			body
-			{
-				margin: 0px auto;
-				padding: 0;
-			}
-			#cr-stage,#cr-stage2
-			{
-				border: 1px solid black;
-			}
-		</style>
-	</head>
-	<body>
-		<canvas id="cr-stage2" style = "float:left;"></canvas>
-	</body>
+	</head> 
+	<body> 
+		<div id="console" style="position:absolute">Console:</div>
+		<div id="cr-stage" style="float:left;"></div>
+		<canvas id="canvas"></canvas>
+	</body> 
 </html>
