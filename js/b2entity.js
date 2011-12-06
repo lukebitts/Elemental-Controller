@@ -25,13 +25,25 @@
 						fixDef.friction = obj_args.friction != undefined ? obj_args.friction : 0.5;
 						fixDef.restitution = obj_args.restitution != undefined ? obj_args.restitution : 0.2;
 						
-						if(obj_args.type){
+						if(obj_args.type && obj_args.type != "box"){
 							if(obj_args.type == "circle"){
 								var r = obj_args.radius/this.world.drawScale/2;
 								fixDef.shape = new b2CircleShape(r);
 								var offX = obj_args.offX/this.world.drawScale || r;
 								var offY = obj_args.offY/this.world.drawScale || r;
 								fixDef.shape.SetLocalPosition(new b2Vec2(offX,offY))
+							}
+							if(obj_args.type == "polygon"){
+								var vertexCount = obj_args.polys.length;
+								fixDef.shape = new b2PolygonShape;
+								var vertex = [];
+								var offX = obj_args.offX/this.world.drawScale || 0;
+								var offY = obj_args.offY/this.world.drawScale || 0;
+								for(j in obj_args.polys){
+									var poly = obj_args.polys[j];
+									vertex.push(new b2Vec2( poly[0]/this.world.drawScale+offX,poly[1]/this.world.drawScale+offY ));
+								}
+								fixDef.shape.SetAsVector(vertex,vertexCount);
 							}
 						}
 						else{

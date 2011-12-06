@@ -16,7 +16,6 @@ b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef;
 
 Crafty.c("b2dWorld",{
 	_world:undefined,
-	_timestep:1/24,
 	init:function(){
 		world = Crafty(Crafty("b2dWorld")[0]);
 		if(world._world != undefined){
@@ -79,8 +78,7 @@ Crafty.c("b2dWorld",{
 		
 		//and finally the events
 		this.bind("EnterFrame",function(){
-			console.log(this._timestep);
-			this._world.Step(this._timestep, 10, 10);
+			this._world.Step(1/24, 10, 10);
             this._world.DrawDebugData();
             this._world.ClearForces();
 		});
@@ -169,11 +167,11 @@ $(document).mousemove(function(e){
 
 $(document).ready(function(){
 	//We initialize the basic Crafty Canvas 
-	Crafty.init(800,600);
+	Crafty.init(750,600);
 	Crafty.canvas.init();
 	
 	//And our physics debug canvas
-	$('#canvas')[0].width = 800;
+	$('#canvas')[0].width = 750;
 	$('#canvas')[0].height = 600;
 	
 	//we should create a world, just to be sure we have the right pointer
@@ -182,7 +180,7 @@ $(document).ready(function(){
 	var world = w.world();
 	
 	b = Crafty.e("PLAYER, 2D, Canvas, Color, b2dObject, Keyboard")
-		.attr({x:40,y:40,w:40,h:50})
+		.attr({x:40,y:40,w:40,h:30})
 		.color("#0af")
 		.b2d({
 			body_type:b2Body.b2_dynamicBody,
@@ -191,7 +189,6 @@ $(document).ready(function(){
 			objects:[{
 				w:40,
 				h:20,
-				//offY:20,
 				restitution:0,
 				density:1
 			},{
@@ -226,7 +223,7 @@ $(document).ready(function(){
 	
 	for(var i = 0;i < 8;i++){
 		Crafty.e("2D, Canvas, Color, b2dObject")
-			.attr({x:80*i,y:540-(25*i)+(i%2==0?25:0),w:80,h:50})
+			.attr({x:80*i,y:540,w:80,h:50})
 			.color("#0a0")
 			.b2d({
 				body_type:b2Body.b2_staticBody,
@@ -251,12 +248,27 @@ $(document).ready(function(){
 			}]
 		})
 		
+	Crafty.e("2D, Canvas, Color, b2dObject")
+		.attr({x:300,y:300,w:50,h:50})
+		.color("#0aa")
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			objects:[{
+				type:"polygon",
+				polys:[[25,0],[50,50],[0,50],[5,25]]
+			},{
+				type:"circle",
+				radius:50
+			}]
+		})
+		
 	Crafty.e("2D, Canvas, Color, b2dObject, AlphaOnTouch, CRATE")
 		.attr({x:400,y:200,w:30,h:30})
 		.color("#0af")
 		.b2d({
 			body_type:b2Body.b2_dynamicBody,
 			objects:[{
+				type:"box",
 				w:30,
 				h:30,
 				density:2,
@@ -265,13 +277,3 @@ $(document).ready(function(){
 		})
 		.flag("PLAYER");
 });
-
-$(window).blur(function(){
-	Crafty.pause();
-});
-
-$(window).focus(function(){
-	Crafty.pause();
-});
-
-
