@@ -13,6 +13,7 @@ b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape,
 b2CircleShape = Box2D.Collision.Shapes.b2CircleShape,	
 b2DebugDraw = Box2D.Dynamics.b2DebugDraw,  
 b2MouseJointDef = Box2D.Dynamics.Joints.b2MouseJointDef;
+b2DistanceJointDef = Box2D.Dynamics.Joints.b2DistanceJointDef;
 
 Crafty.c("b2dWorld",{
 	_world:undefined,
@@ -221,6 +222,7 @@ $(document).ready(function(){
 		
 	//Crafty.viewport.follow(b,0,0);
 	
+	//TILE-FLOOR EXAMPLE:
 	for(var i = 0;i < 8;i++){
 		Crafty.e("2D, Canvas, Color, b2dObject")
 			.attr({x:80*i,y:540,w:80,h:50})
@@ -236,6 +238,7 @@ $(document).ready(function(){
 			});
 	}
 	
+	//DYNAMIC CIRCLE EXAMPLE
 	Crafty.e("2D, Canvas, Color, b2dObject")
 		.attr({x:200,y:400,w:30,h:30})
 		.color("#0ff")
@@ -247,7 +250,8 @@ $(document).ready(function(){
 				restitution:0.5
 			}]
 		})
-		
+	
+	//COMPLEX BODY AND POLYGON EXAMPLE
 	Crafty.e("2D, Canvas, Color, b2dObject")
 		.attr({x:300,y:300,w:50,h:50})
 		.color("#0aa")
@@ -261,7 +265,8 @@ $(document).ready(function(){
 				radius:50
 			}]
 		})
-		
+	
+	//DYNAMIC BOX EXAMPLE
 	Crafty.e("2D, Canvas, Color, b2dObject, AlphaOnTouch, CRATE")
 		.attr({x:400,y:200,w:30,h:30})
 		.color("#0af")
@@ -276,4 +281,35 @@ $(document).ready(function(){
 			}]
 		})
 		.flag("PLAYER");
+		
+	//JOINT-OBJECTS EXAMPLE
+	var je1 = Crafty.e("2D, Canvas, Color, b2dObject")
+		.attr({x:0,y:0,w:20,h:20})
+		.color("#0af")
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			objects:[{
+				type:"box",
+				w:20,
+				h:20,
+				density:2
+			}]
+		}).body;
+	Crafty.e("2D, Canvas, Color, b2dObject")
+		.attr({x:0,y:0,w:20,h:20})
+		.color("#0af")
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			objects:[{
+				type:"box",
+				w:20,
+				h:20,
+				density:2
+			}],
+			joints:[{
+				type:"distance",
+				other:je1,
+				length:100
+			}]
+		})
 });
