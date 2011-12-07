@@ -239,7 +239,7 @@ $(document).ready(function(){
 	}
 	
 	//DYNAMIC CIRCLE EXAMPLE
-	Crafty.e("2D, Canvas, Color, b2dObject")
+	/*Crafty.e("2D, Canvas, Color, b2dObject")
 		.attr({x:200,y:400,w:30,h:30})
 		.color("#0ff")
 		.b2d({
@@ -280,11 +280,11 @@ $(document).ready(function(){
 				restitution:0
 			}]
 		})
-		.flag("PLAYER");
+		.flag("PLAYER");*/
 		
 	//JOINT-OBJECTS EXAMPLE
 	var je1 = Crafty.e("2D, Canvas, Color, b2dObject")
-		.attr({x:0,y:0,w:20,h:20})
+		.attr({x:400,y:0,w:20,h:20})
 		.color("#0af")
 		.b2d({
 			body_type:b2Body.b2_dynamicBody,
@@ -296,7 +296,7 @@ $(document).ready(function(){
 			}]
 		}).body;
 	Crafty.e("2D, Canvas, Color, b2dObject")
-		.attr({x:0,y:0,w:20,h:20})
+		.attr({x:600,y:0,w:20,h:20})
 		.color("#0af")
 		.b2d({
 			body_type:b2Body.b2_dynamicBody,
@@ -309,7 +309,7 @@ $(document).ready(function(){
 			joints:[{
 				type:"distance",
 				other:je1,
-				length:100
+				distance:100
 			}]
 		})
 });
