@@ -58,7 +58,7 @@
 					}
 					body.CreateFixture(fixDef);
 				}
-				if(args.joints != undefined){
+				/*if(args.joints != undefined){
 					for(i in args.joints){
 						joint_args = args.joints[i];
 						if(joint_args.type == "distance"){
@@ -75,7 +75,7 @@
 						}
 						
 					}
-				}
+				}*/
 				
 			}
 			else{

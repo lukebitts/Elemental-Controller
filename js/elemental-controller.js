@@ -39,11 +39,11 @@ Crafty.c("b2dWorld",{
 		debugDraw.SetLineThickness(1.0);
 		debugDraw.SetFlags(
 			b2DebugDraw.e_shapeBit | 
-			b2DebugDraw.e_jointBit |
-			b2DebugDraw.e_aabbBit |
-			b2DebugDraw.e_centerOfMassBit |
-			b2DebugDraw.e_pairBit |
-			b2DebugDraw.e_controllerBit
+			b2DebugDraw.e_jointBit //|
+			//b2DebugDraw.e_aabbBit |
+			//b2DebugDraw.e_centerOfMassBit |
+			//b2DebugDraw.e_pairBit |
+			//b2DebugDraw.e_controllerBit
 			);
 		this._world.SetDebugDraw(debugDraw);
 		
@@ -60,6 +60,7 @@ Crafty.c("b2dWorld",{
 				if (typeof eB._onContact === 'function') {
 					eB._onContact(eA);
 				}
+				console.log(contact);
 			}
 		};
 		contactListener.EndContact = function(contact) {
@@ -94,7 +95,7 @@ Crafty.c('b2dObject',{
 	body:undefined,
 	onContact:undefined,
 	init:function(){
-		this.requires('b2dWorld');
+		this.requires('2D, b2dWorld');
 	},
 	b2d:function(args){
 		var x = this.x != null ? this.x : (args.x != null ? args.x : 0);
@@ -136,6 +137,25 @@ Crafty.c('b2dObject',{
 		return this;
 	}
 });
+
+Crafty.c('b2dJoint',{
+	joint:undefined,
+	init:function(){
+		this.requires('b2dWorld')
+	},
+	b2djoint:function(args){
+		var bodyA = args.bodyA;
+		var bodyB = args.bodyB;
+		if(args.type == "distance"){
+			var jointDef = new b2DistanceJointDef;
+			jointDef.Initialize(bodyA,bodyB,bodyA.GetWorldCenter(),bodyB.GetWorldCenter());
+			jointDef.length = 200/this._world.drawScale;
+			jointDef.dampingRatio = 1;
+			jointDef.frequencyHz = 1;
+			this.joint = this._world.CreateJoint(jointDef);
+		}
+	}
+})
 
 Crafty.c("AlphaOnTouch",{
 	_flag:undefined,
@@ -223,8 +243,8 @@ $(document).ready(function(){
 	//Crafty.viewport.follow(b,0,0);
 	
 	//TILE-FLOOR EXAMPLE:
-	for(var i = 0;i < 8;i++){
-		Crafty.e("2D, Canvas, Color, b2dObject")
+	for(var i = 0;i < 9;i++){
+		Crafty.e("TILE, 2D, Canvas, Color, b2dObject")
 			.attr({x:80*i,y:540,w:80,h:50})
 			.color("#0a0")
 			.b2d({
@@ -239,7 +259,7 @@ $(document).ready(function(){
 	}
 	
 	//DYNAMIC CIRCLE EXAMPLE
-	/*Crafty.e("2D, Canvas, Color, b2dObject")
+	Crafty.e("2D, Canvas, Color, b2dObject")
 		.attr({x:200,y:400,w:30,h:30})
 		.color("#0ff")
 		.b2d({
@@ -280,7 +300,7 @@ $(document).ready(function(){
 				restitution:0
 			}]
 		})
-		.flag("PLAYER");*/
+		.flag("PLAYER");
 		
 	//JOINT-OBJECTS EXAMPLE
 	var je1 = Crafty.e("2D, Canvas, Color, b2dObject")
@@ -292,24 +312,31 @@ $(document).ready(function(){
 				type:"box",
 				w:20,
 				h:20,
-				density:2
+				density:1
 			}]
 		}).body;
-	Crafty.e("2D, Canvas, Color, b2dObject")
+	var je2 = Crafty.e("2D, Canvas, Color, b2dObject")
 		.attr({x:600,y:0,w:20,h:20})
 		.color("#0af")
 		.b2d({
-			body_type:b2Body.b2_dynamicBody,
+			body_type:b2Body.b2_staticBody,
 			objects:[{
 				type:"box",
 				w:20,
 				h:20,
-				density:2
-			}],
-			joints:[{
-				type:"distance",
-				other:je1,
-				distance:100
+				density:1
 			}]
+		}).body;
+	Crafty.e("b2dJoint")
+		.b2djoint({
+			type:"distance",
+			bodyA:je1,
+			bodyB:je2
 		})
+		
+	/*setTimeout(function(){
+		Crafty("TILE").each(function(){
+			this.body.SetType(b2Body.b2_dynamicBody);
+		})
+	},2000);*/
 });
