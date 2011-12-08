@@ -36,21 +36,19 @@ Crafty.c("b2dWorld",{
 		//The collision listeners
 		var contactListener = new Box2D.Dynamics.b2ContactListener();
 		contactListener.BeginContact = function(contact){
-			console.log(contact);
 			var bodyA = contact.GetFixtureA().GetBody().userData.crafty_entity;
 			var bodyB = contact.GetFixtureB().GetBody().userData.crafty_entity;
 			if(bodyA.has("b2dCollision") && bodyB.has("b2dCollision")){
-				bodyA.trigger("ContactStart",bodyB);
-				bodyB.trigger("ContactStart",bodyA);
-				console.log(bodyA.trigger);
+				bodyA.contactStart(bodyB);
+				bodyB.contactStart(bodyA);
 			}
 		}
 		contactListener.EndContact = function(contact){
 			var bodyA = contact.GetFixtureA().GetBody().userData.crafty_entity;
 			var bodyB = contact.GetFixtureB().GetBody().userData.crafty_entity;
 			if(bodyA.has("b2dCollision") && bodyB.has("b2dCollision")){
-				bodyA.trigger("ContactEnd",bodyB);
-				bodyB.trigger("ContactEnd",bodyA);
+				bodyA.contactEnd(bodyB);
+				bodyB.contactEnd(bodyA);
 			}
 		}
 		this._world.SetContactListener(contactListener);
@@ -72,11 +70,17 @@ Crafty.c("b2dCollision",{
 	init:function(){
 		this.bind("ContactStart",function(e){
 			this._collisionList.push(e);
-		})
-		.bind("ContactEnd",function(e){
+		});
+		this.bind("ContactEnd",function(e){
 			var removeIndex = this._collisionList.indexOf(e);
 			this._collisionList.splice(removeIndex);
-		})
+		});
+	},
+	contactStart:function(e){
+		this.trigger("ContactStart",e);
+	},
+	contactEnd:function(e){
+		this.trigger("ContactEnd",e);
 	},
 	hit:function(component){
 		for(i in this._collisionList){
@@ -188,6 +192,7 @@ $(document).ready(function(){
 				h:30
 			}]
 		})
+		
 	
 	//dynamic box
 	Crafty.e("b2dObject, b2dCollision, b2dSimpleGraphics, Color, Canvas")
@@ -206,7 +211,7 @@ $(document).ready(function(){
 	//dynamic complex object
 	Crafty.e("b2dObject, b2dCollision, b2dSimpleGraphics, Color, Canvas, Keyboard")
 		.color("#0af")
-		.attr({x:200,y:0,w:30,h:30})
+		.attr({x:200,y:100,w:30,h:30})
 		.b2d({
 			body_type:b2Body.b2_dynamicBody,
 			fixedRotation:true,
@@ -216,17 +221,12 @@ $(document).ready(function(){
 				restitution:0.9,
 				radius:30,
 				offY:30
-			},{
-				type:"polygon",
-				polys:[[25,0],[50,50],[0,50],[5,25]],
-				density:1,
-				w:30,
-				h:30
 			}]
 		})
 		.bind("EnterFrame",function(){
-			if(this.hit("2D"))
+			if(this.hit("2D")){
 				console.log("a");
+			}
 		})
 		.bind("KeyDown",function(e){
 			console.log(this._collisionList)
