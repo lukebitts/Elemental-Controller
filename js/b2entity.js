@@ -57,26 +57,7 @@
 						fixDef.shape.SetAsOrientedBox(w, h,new b2Vec2(offX,offY),0.0);
 					}
 					body.CreateFixture(fixDef);
-				}
-				/*if(args.joints != undefined){
-					for(i in args.joints){
-						joint_args = args.joints[i];
-						if(joint_args.type == "distance"){
-							var joint = new b2DistanceJointDef;
-							//joint.Initialize(body,joint_args.other,body.GetWorldCenter(),joint_args.other.GetWorldCenter());
-							joint.bodyA = body;
-							joint.bodyB = joint_args.other;
-							joint.localAnchorA = body.GetWorldCenter();
-							joint.localAnchorB = joint_args.other.GetWorldCenter();
-							joint.length = -1//joint_args.distance/this.world.drawScale;
-							joint.dampingRatio = 0.7;
-							joint.frequencyHz = 0.2;
-							this.world.CreateJoint(joint);
-						}
-						
-					}
-				}*/
-				
+				}				
 			}
 			else{
 				body = args;
