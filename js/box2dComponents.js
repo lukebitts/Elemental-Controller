@@ -238,7 +238,6 @@ Crafty.c("b2dObject",{
 				fixDef.shape = new Box2D.Collision.Shapes.b2CircleShape(r);
 				var offX = obj_args.offX*2/Crafty.DRAW_SCALE || r;
 				var offY = obj_args.offY*2/Crafty.DRAW_SCALE || r;
-				console.log(this);
 				fixDef.shape.SetLocalPosition(new b2Vec2(offX,offY));
 			}
 			else if(obj_args.type == "polygon"){

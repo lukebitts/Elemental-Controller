@@ -33,8 +33,10 @@ Crafty.c("HarmfulAtSpeed",{
 						vecvel = vel.x + vel.y;
 					else
 						vecvel = Math.sqrt(Math.pow(vel.x,2)+Math.pow(vel.y,2));
-					if(Math.abs(vecvel) > 5)
+					if(Math.abs(vecvel) > 5){
 						console.log(vecvel+" dano:"+this._damage);
+						//e.body().SetAngle(0.5);
+					}
 				}
 			})
 	}
@@ -51,10 +53,6 @@ Crafty.c("PlayerController",{
 						var pos = this.body().GetPosition();
 						var vel = this.body().GetLinearVelocity();
 						this.body().SetLinearVelocity(new b2Vec2(vel.x,0));
-						var vecpos = new b2Vec2(pos.x,pos.y+0.01);
-						var matpos = new Box2D.Common.Math.b2Mat22(0,1);
-						var transform = new Box2D.Common.Math.b2Transform(vecpos,matpos);
-						this.body().SetTransform(transform);
 						this.body().ApplyImpulse(new b2Vec2(0,-6),this.body().GetWorldCenter());
 					}
 				}
@@ -153,8 +151,7 @@ Crafty.scene("DemoLevel",function(){
 		.color("#0af")
 		.b2d({
 			body_type:b2Body.b2_dynamicBody,
-			friction:1,
-			fixedRotation:true,
+			fixedRotation:false,
 			objects:[{
 				type:"box",
 				w:30,
