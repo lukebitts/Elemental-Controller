@@ -13,12 +13,12 @@ Basic list:
 Other Basic Title
 -----------------
 
-Want to contribute? Great! There are two ways to add markups.
+Text text text text
 
 
 ### Sub-Title
 
-Another basic text, I can add a [link][rh2] by using a bookmark in the end of the file (so we won't polute our text).
+Another basic text, I can add a [link][r2h] by using a bookmark in the end of the file (so we won't polute our text).
 
     full line code example.
       where I can do whatever I want
