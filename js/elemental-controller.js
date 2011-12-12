@@ -18,13 +18,27 @@ Crafty.c("Jumper",{
 				if(e.has("FLOOR"))
 					this._onFloor = true;
 			})
-			.bind("ContactEnd",function(e){
-				console.log("D:");
-				if(e.has("FLOOR"))
-					this._onFloor = false;
-			})
 	}
 });
+
+Crafty.c("HarmfulAtSpeed",{
+	_damage:0.5,
+	init:function(){
+		this.requires("b2dObject, b2dCollision")
+			.bind("ContactStart",function(e){
+				if(e.has("PLAYER")){
+					var vel = this.body().GetLinearVelocity();
+					var vecvel;
+					if(vel.x * vel.y == 0)
+						vecvel = vel.x + vel.y;
+					else
+						vecvel = Math.sqrt(Math.pow(vel.x,2)+Math.pow(vel.y,2));
+					if(Math.abs(vecvel) > 5)
+						console.log(vecvel+" dano:"+this._damage);
+				}
+			})
+	}
+})
 
 Crafty.c("PlayerController",{
 	_maxVelocity:0.5,
@@ -33,6 +47,7 @@ Crafty.c("PlayerController",{
 			.bind("KeyDown",function(e){
 				if(e.keyCode == 87){
 					if(this._onFloor){
+						this._onFloor = false;
 						var pos = this.body().GetPosition();
 						var vel = this.body().GetLinearVelocity();
 						this.body().SetLinearVelocity(new b2Vec2(vel.x,0));
@@ -49,7 +64,6 @@ Crafty.c("PlayerController",{
 					this.body().SetLinearVelocity(new b2Vec2(0,this.body().GetLinearVelocity().y));
 			})
 			.bind("EnterFrame",function(){
-				this.body().ApplyImpulse(new b2Vec2(0,1),this.body().GetWorldCenter());
 				var vel = this.body().GetLinearVelocity();
 				if(Math.abs(vel.x)>this._maxVelocity){
 					vel.x = Math.signum(vel.x) * this._maxVelocity;
@@ -80,7 +94,12 @@ Crafty.c("PlayerController",{
 })
 
 Crafty.scene("DemoLevel",function(){
-	Crafty.sprite(60,"img/land.gif",{spr_land:[0,0]});
+	Crafty.sprite(60,"img/land.png",{spr_land:[0,0]});
+	Crafty.sprite(60,"img/rock.png",{spr_rock:[0,0]});
+	
+	Crafty.e("2D, Canvas, Image")
+		.attr({x:0,y:0,w:800,h:600})
+		.image("img/bg1.png");
 	
 	for(var i=0;i<20;i++){
 		Crafty.e("b2dObject, b2dSimpleGraphics, b2dCollision, spr_land, Canvas, ElementType, FLOOR")
@@ -88,21 +107,52 @@ Crafty.scene("DemoLevel",function(){
 			.type("earth")
 			.b2d({
 				body_type:b2Body.b2_staticBody,
-				friction:1,
 				objects:[{
 					type:"box",
 					w:60,
-					h:60
+					h:60,
+					density:10,
+					friction:1
 				}]
 			});
 	}
 	
+	for(var i=0;i<20;i++){
+		Crafty.e("b2dObject, b2dSimpleGraphics, b2dMouse, b2dCollision, HarmfulAtSpeed, spr_land, Canvas, ElementType, FLOOR")
+			.attr({x:i*60,y:0,w:60,h:60})
+			.type("earth")
+			.b2d({
+				body_type:b2Body.b2_staticBody,
+				bullet:true,
+				//fixedRotation:true,
+				objects:[{
+					type:"circle",
+					radius:60,
+					h:60,
+					density:1,
+					friction:1
+				}]
+			})
+			.bind("MouseDown",function(e){
+				if(e.b2dType == "inside"){
+					this.body().SetAngularDamping(10);
+					this.removeComponent("spr_land");
+					this.addComponent("spr_rock");
+					this.body().SetType(b2Body.b2_dynamicBody);
+					this.body().SetAwake(true);
+				}
+			})
+			.bind("ContactStart",function(e){
+				if(e.has("FLOOR")){}
+					
+			})
+	}
+	
 	Crafty.e("b2dObject, b2dSimpleGraphics, b2dCollision, 2D, Canvas, Color, PlayerController, PLAYER")
-		.attr({x:60,y:20,w:30,h:75})
+		.attr({x:60,y:100,w:30,h:75})
 		.color("#0af")
 		.b2d({
 			body_type:b2Body.b2_dynamicBody,
-			density:1,
 			friction:1,
 			fixedRotation:true,
 			objects:[{
@@ -115,6 +165,7 @@ Crafty.scene("DemoLevel",function(){
 				offY:30
 			}]
 		})
+		
 });
 
 $(document).ready(function(){
@@ -135,7 +186,7 @@ $(document).ready(function(){
 	Crafty.scene("DemoLevel");
 	
 	Crafty("2D").each(function(){
-		this.alpha = 0.1;
+		this.alpha = 1;
 	})
 	
 });

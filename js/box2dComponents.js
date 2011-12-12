@@ -30,7 +30,7 @@ Crafty.c("b2dWorld",{
 		debugDraw.SetFillAlpha(0.5);
 		debugDraw.SetLineThickness(1.0);
 		debugDraw.SetFlags(
-			Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_jointBit
+			Box2D.Dynamics.b2DebugDraw.e_shapeBit | Box2D.Dynamics.b2DebugDraw.e_jointBit | 0x0010
 		);
 		this._world.SetDebugDraw(debugDraw);
 		
@@ -238,6 +238,7 @@ Crafty.c("b2dObject",{
 				fixDef.shape = new Box2D.Collision.Shapes.b2CircleShape(r);
 				var offX = obj_args.offX*2/Crafty.DRAW_SCALE || r;
 				var offY = obj_args.offY*2/Crafty.DRAW_SCALE || r;
+				console.log(this);
 				fixDef.shape.SetLocalPosition(new b2Vec2(offX,offY));
 			}
 			else if(obj_args.type == "polygon"){
@@ -326,7 +327,7 @@ Crafty.c("b2dSimpleGraphics",{
 			.bind("EnterFrame",function(){
 				this.x = this._body.GetPosition().x * Crafty.DRAW_SCALE;
 				this.y = this._body.GetPosition().y * Crafty.DRAW_SCALE;
-				this.angle = this._body.GetAngle()*180/Math.PI;
+				this.rotation = this.body().GetAngle() * 180/Math.PI;
 			})
 	}
 })
