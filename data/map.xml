@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="1" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="1" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="1" element="earth" type="usable"/>
+		<tile line="2" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="1" element="earth" type="usable"/>
+		<tile line="2" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="5" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="5" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+	<column>
+		<tile line="00" element="earth" type="usable"/>
+		<tile line="8" element="earth" type="unusable"/>
+		<tile line="9" element="earth" type="unusable"/>
+	</column>
+</map>
