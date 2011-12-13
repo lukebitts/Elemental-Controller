@@ -212,7 +212,12 @@ Crafty.c("b2dCollision",{
 Crafty.c("b2dObject",{
 	_body:undefined,
 	init:function(){
-		this.requires("b2dWorld");
+		this.requires("b2dWorld")
+			.bind("Remove",function(){
+				setTimeout(function(e,f){
+					f.DestroyBody(e)
+				},0,this.body(),this._world);
+			})
 	},
 	b2d:function(args){
 		var bodyDef = new Box2D.Dynamics.b2BodyDef();
