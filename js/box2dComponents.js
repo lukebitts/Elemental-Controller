@@ -19,7 +19,7 @@ Crafty.c("b2dWorld",{
 		
 		//We create the world
 		var gravity = new b2Vec2(0,10);
-		this._world = new Box2D.Dynamics.b2World(gravity,false);
+		this._world = new Box2D.Dynamics.b2World(gravity,true);
 		
 		//The debug data
 		var debugDraw = new Box2D.Dynamics.b2DebugDraw();

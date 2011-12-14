@@ -324,27 +324,26 @@ function createPlayableCharacter(x,y){
 function createNpcCharacter(x,y){
 	return createBasicCharacter(x,y)
 		.attr({"_walkDir":0})
+		.attr({"_walkAction":"walk"})
+		.attr({"_lastFrame":0})
+		.attr({"_skipFrame":100})
 		.floorFlag("FLOOR")
-		.bind("EnterFrame",function(){
-			if(this._walkDir == 1)
-				this.walkRight();
-			else if(this._walkDir == -1)
-				this.walkLeft();
-			else
+		.bind("EnterFrame",function(e){
+			if(e.frame - this._skipFrame > this._lastFrame){
+				this._lastFrame = e.frame;
+				this._walkDir = Math.random()*100>50?-1:1;
+				this._walkAction = Math.random()*100>50?"walk":"stop";
+				console.log(this._walkDir,this._walkAction)
+			}
+			if(this._walkAction ==  "stop"){
 				this.walkStop();
-			if(this.x <= 40){
-				this._walkDir = 0;
-				setTimeout(function(e){
-					e._walkDir = 1;
-				},1,this);
+				return;
 			}
-			else if (this.x >= 730){
-				this._walkDir = 0;
-				setTimeout(function(e){
-					e._walkDir = -1;
-				},1,this);
-			}
-			Math.random()*100>98?this.jump():this.attr();
+			if(this.x >= 700) this._walkDir = -1;
+			if(this.x <= 40) this._walkDir = 1;
+			if(this._walkDir == -1) this.walkLeft();
+			if(this._walkDir == 1) this.walkRight();
+			
 		})
 }
 
@@ -371,7 +370,7 @@ Crafty.scene("DemoLevel",function(){
 	Crafty.e("TilesHolder").createMapFromXML("data/map.xml");
 
 	createPlayableCharacter(200,200);
-	//createNpcCharacter(760,200);
+	createNpcCharacter(760,200);
 
 });
 
