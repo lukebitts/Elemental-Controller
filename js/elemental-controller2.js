@@ -334,13 +334,14 @@ function createNpcCharacter(x,y){
 				this._walkDir = Math.random()*100>50?-1:1;
 				this._walkAction = Math.random()*100>50?"walk":"stop";
 				console.log(this._walkDir,this._walkAction)
+				this.walkStop();
 			}
 			if(this._walkAction ==  "stop"){
 				this.walkStop();
 				return;
 			}
-			if(this.x >= 700) this._walkDir = -1;
-			if(this.x <= 40) this._walkDir = 1;
+			if(this.x >= 700){ this.walkStop(); this._walkDir = -1; }
+			if(this.x <= 40){ this.walkStop(); this._walkDir = 1; }
 			if(this._walkDir == -1) this.walkLeft();
 			if(this._walkDir == 1) this.walkRight();
 			
