@@ -119,10 +119,14 @@ function createUsableTile(x,y,element){
 				body_type:b2Body.b2_dynamicBody,
 				bullet:true,
 				objects:[{
-					type:"circle",
+					type:"polygon",
+					polys:[[0,17],[20,0],[44,0],[63,20],[63,39],[40,63],[17,63],[0,39]],
+					friction:1,
+					density:1
+					/*type:"circle",
 					friction:1,
 					density:2,
-					radius:62
+					radius:62*/
 				}]
 			});
 			this.body().SetAngularDamping(10);
