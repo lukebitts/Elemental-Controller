@@ -74,20 +74,24 @@ Crafty.c("ArrayAdd",{
 });
 
 $(document).mousemove(function(e){
+	//if(e.clientX > 800 || e.clientY > 600) return;
 	Crafty("b2dMouse").each(function(){
 		this.mouseMove(e);
 	});
 });
 $(document).mousedown(function(e){
+	//if(e.clientX > 800 || e.clientY > 600) return;
 	Crafty("b2dMouse").each(function(){
 		this.mouseDown(e);
 	});
 });
 $(document).mouseup(function(e){
+	//if(e.clientX > 800 || e.clientY > 600) return;
 	Crafty("b2dMouse").each(function(){
 		this.mouseUp(e);
 	});
 });
+
 Crafty.c("b2dMouse",{
 	_mouseX:0,
 	_mouseY:0,
@@ -115,6 +119,7 @@ Crafty.c("b2dMouse",{
 		this.requires("b2dObject");
 	},
 	mouseDown:function(e){
+		if(e.clientX > 800 || e.clientY > 600) return;
 		var result = this._getBodyAtMouse(e);
 		if(result != this._body) result = undefined;
 		if(result)

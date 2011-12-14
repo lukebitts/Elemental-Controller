@@ -121,7 +121,7 @@ function createUsableTile(x,y,element){
 				objects:[{
 					type:"circle",
 					friction:1,
-					density:1,
+					density:2,
 					radius:62
 				}]
 			});
@@ -206,8 +206,10 @@ Crafty.c("CharacterJump",{
 	init:function(){
 		this.requires("b2dObject")
 			.bind("ContactStart",function(e){
-				if(e.has(this._floorFlag))
+				if(e.has(this._floorFlag)){
 					this._onFloor = true;
+					this.trigger("HitFloor");
+				}
 			});
 	},
 	onFloor:function(){
@@ -219,11 +221,12 @@ Crafty.c("CharacterJump",{
 	},
 	jump:function(){
 		if(this._onFloor){
+			this.trigger("Jumped");
 			this._onFloor = false;
 			var pos = this.body().GetPosition();
 			var vel = this.body().GetLinearVelocity();
 			this.body().SetLinearVelocity(new b2Vec2(vel.x,0));
-			this.body().ApplyImpulse(new b2Vec2(0,-6),this.body().GetWorldCenter());
+			this.body().ApplyImpulse(new b2Vec2(0,-7),this.body().GetWorldCenter());
 		}
 	}
 })
@@ -283,8 +286,8 @@ function createBasicCharacter(x,y){
 			fixedRotation:true,
 			objects:[{
 				type:"box",
-				density:1,
-				friction:1,
+				density:2,
+				friction:0,
 				w:32,
 				h:64,
 			},{
@@ -292,7 +295,7 @@ function createBasicCharacter(x,y){
 				density:1,
 				friction:1,
 				radius:32,
-				offY:32
+				offY:34
 			}]
 		})
 }
@@ -343,7 +346,7 @@ function createNpcCharacter(x,y){
 
 Crafty.scene("DemoLevel",function(){
 	Crafty.DRAW_SCALE = 64;
-	Crafty.debugging = false;
+	Crafty.debugging = true;
 	
 	//Box2D world
 	w = Crafty.e("b2dWorld");
@@ -382,5 +385,11 @@ $(document).ready(function(){
 	
 	Crafty("2D").each(function(){
 		this.alpha = 1;
-	})
+	});
+	
 });
+
+function switchDebug(){
+	Crafty.debugging = !Crafty.debugging;
+	$("#"+Crafty.debug_ctx)[0].getContext("2d").clearRect(0,0,800,600);
+}
