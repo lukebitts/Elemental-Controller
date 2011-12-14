@@ -1,43 +1,55 @@
+Math.signum = function(n){
+	return !n?0:n>0?1:-1;
+}
+
 Crafty.c("VoxelTile",{
-	_north:null,
+	_neighbours:undefined,
+	/*_north:null,
 	_south:null,
 	_east:null,
-	_west:null,
+	_west:null,*/
+	_getInverseDirection:function(dir){
+		if(dir == "north") return "south";
+		if(dir == "south") return "north";
+		if(dir == "east") return "west";
+		if(dir == "west") return "east";
+	},
+	init:function(){
+		n = this._neighbours = {};
+		n["_north"] = null;
+		n["_south"] = null;
+		n["_east"] = null;
+		n["_west"] = null;
+	},
 	triggerNeighbours:function(evt,arg){
-		if(this._north) this._north.trigger(evt,arg);
-		if(this._south) this._south.trigger(evt,arg);
-		if(this._east) this._east.trigger(evt,arg);
-		if(this._west) this._west.trigger(evt,arg);
+		for(i in this._neighbours)
+			if(this._neighbours[i]!=null) this._neighbours[i].trigger(evt, arg);
 	},
 	hasNeighbour:function(){
-		if(!this._north && !this._south && !this._east && !this._west )
-			return false;
-		return true;
+		for(i in this._neighbours)
+			if(this._neighbours[i] != null) return true;
+		return false;
 	},
 	getNeighbours:function(){
-		var ret = [];
-		if(this._north) ret.push(this._north);
-		if(this._south) ret.push(this._south);
-		if(this._east) ret.push(this._east);
-		if(this._west) ret.push(this._west);
+		var ret = {};
+		for(i in this._neighbours)
+			if(this._neighbours[i] != null)
+				ret[i] = this.neighbours[i];
+		return ret;
 	},
 	removeNeighbours:function(){
-		if(this._north){
-			this._north._south = null;
-			this._north = null;
-		};
-		if(this._south){
-			this._south._north = null;
-			this._south = null;
+		var n = this._neighbours;
+		for(i in n){
+			if(n[i] != null)
+				n[i]._neighbours[this._getInverseDirection(i)] = null
+				n[i] = null;	
 		}
-		if(this._east){
-			this._east._west = null;
-			this._east = null;
-		}
-		if(this._west){
-			this._west._east = null;
-			this._west = null;
-		}
+	},
+	whichNeighbour:function(n){
+		for(i in this._neighbours)
+			if(this._neighbours[i] == n)
+				return i;
+		return false;
 	}
 });
 
@@ -114,6 +126,12 @@ function createUsableTile(x,y,element){
 				}]
 			});
 			this.body().SetAngularDamping(10);
+			this.triggerNeighbours("NFell",this);
+		})
+		.bind("NFell",function(e){
+			//if(this == e) return;
+			//this.removeNeighbours();
+			//this.changeToDynamic();
 		});
 }
 
@@ -150,7 +168,7 @@ Crafty.c("TilesHolder",{
 		for(i in this._mapData){
 			var pos = i.split("_");
 			pos[0] = parseInt(pos[0]); pos[1] = parseInt(pos[1]);
-		
+			this._mapData[i].usable = "usable";
 			if(this._mapData[i].usable == "usable")
 				this._mapTiles[i] = createUsableTile(parseInt(pos[0])*64,parseInt(pos[1])*64,this._mapData[i].element)
 			else
@@ -159,14 +177,17 @@ Crafty.c("TilesHolder",{
 		for(i in this._mapTiles){
 			var pos = i.split("_");
 			pos[0] = parseInt(pos[0]); pos[1] = parseInt(pos[1]);
-			this._mapTiles[i]._north = this._mapTiles[pos[0]+"_"+(pos[1]-1)];
-			this._mapTiles[i]._south = this._mapTiles[pos[0]+"_"+(pos[1]+1)];
-			this._mapTiles[i]._east = this._mapTiles[(pos[0]+1)+"_"+pos[1]];
-			this._mapTiles[i]._west = this._mapTiles[(pos[0]-1)+"_"+pos[1]];
+			this._mapTiles[i]._neighbours["_north"] = this._mapTiles[pos[0]+"_"+(pos[1]-1)];
+			this._mapTiles[i]._neighbours["_south"] = this._mapTiles[pos[0]+"_"+(pos[1]+1)];
+			this._mapTiles[i]._neighbours["_east"] = this._mapTiles[(pos[0]+1)+"_"+pos[1]];
+			this._mapTiles[i]._neighbours["_west"] = this._mapTiles[(pos[0]-1)+"_"+pos[1]];
 		}
 	},
+	init:function(){
+		this.requires("XML");
+	},
 	createMapFromXML:function(xmlpath){
-		var xml = Crafty.e("XML").xml(xmlpath);
+		var xml = this.xml(xmlpath);
 		var columns = xml.getElementsByTagName("column");
 		for(var i=0;i<columns.length;i++){
 			for(var j=0;j<columns[i].childNodes.length;j++){
@@ -178,6 +199,147 @@ Crafty.c("TilesHolder",{
 		this._createMap();
 	}
 });
+
+Crafty.c("CharacterJump",{
+	_onFloor:false,
+	_floorFlag:"",
+	init:function(){
+		this.requires("b2dObject")
+			.bind("ContactStart",function(e){
+				if(e.has(this._floorFlag))
+					this._onFloor = true;
+			});
+	},
+	onFloor:function(){
+		return this._onFloor;
+	},
+	floorFlag:function(f){
+		this._floorFlag = f;
+		return this;
+	},
+	jump:function(){
+		if(this._onFloor){
+			this._onFloor = false;
+			var pos = this.body().GetPosition();
+			var vel = this.body().GetLinearVelocity();
+			this.body().SetLinearVelocity(new b2Vec2(vel.x,0));
+			this.body().ApplyImpulse(new b2Vec2(0,-6),this.body().GetWorldCenter());
+		}
+	}
+})
+
+Crafty.c("CharacterMovement",{
+	_walkLeft:false,
+	_walkRight:false,
+	_maxVelocity:0.5,
+	init:function(){
+		this.requires("b2dObject")
+			.bind("EnterFrame",function(){
+				var vel = this.body().GetLinearVelocity();
+				if(Math.abs(vel.x)>this._maxVelocity){
+					vel.x = Math.signum(vel.x) * this._maxVelocity;
+					this.body().SetLinearVelocity(vel);
+				}
+				if(this._walkLeft || this._walkRight){
+					this.body().SetLinearVelocity(new b2Vec2(vel.x*0.9,vel.y));
+				}
+				if(!this._onFloor){
+					this.body().GetFixtureList().SetFriction(0);
+				}
+				else {
+					if(!this._walkLeft && !this._walkRight){
+						this.body().GetFixtureList().SetFriction(100);
+					}
+					else{
+						this.body().GetFixtureList().SetFriction(0.2);
+					}
+				}
+				//msg(this.body().GetFixtureList().GetFriction(),this._onFloor);
+				if(this._walkLeft && vel.x > -this._maxVelocity){
+					this.body().ApplyImpulse(new b2Vec2(-2,0),this.body().GetWorldCenter());
+				}
+				if(this._walkRight && vel.x < this._maxVelocity)
+					this.body().ApplyImpulse(new b2Vec2(2,0),this.body().GetWorldCenter());
+			})
+	},
+	walkLeft:function(){
+		this._walkLeft = true;
+	},
+	walkRight:function(){
+		this._walkRight = true;
+	},
+	walkStop:function(){
+		this._walkLeft = this._walkRight = false;
+	}
+})
+
+function createBasicCharacter(x,y){
+	return Crafty.e("b2dObject, b2dSimpleGraphics, b2dCollision, CharacterMovement, CharacterJump, Color, Canvas")
+		.attr({x:x,y:y,w:32,h:84})
+		.color("#0af")
+		.floorFlag("FLOOR")
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			fixedRotation:true,
+			objects:[{
+				type:"box",
+				density:1,
+				friction:1,
+				w:32,
+				h:64,
+			},{
+				type:"circle",
+				density:1,
+				friction:1,
+				radius:32,
+				offY:32
+			}]
+		})
+}
+
+function createPlayableCharacter(x,y){
+	return createBasicCharacter(x,y)
+		.addComponent("Keyboard")
+		.bind("KeyDown",function(e){
+			if(e.keyCode == 65)
+				this.walkLeft();
+			if(e.keyCode == 68)
+				this.walkRight();
+			if(e.keyCode == 87)
+				this.jump();
+		})
+		.bind("KeyUp",function(e){
+			if(e.keyCode == 65 || e.keyCode == 68)
+				this.walkStop();
+		})
+}
+
+function createNpcCharacter(x,y){
+	return createBasicCharacter(x,y)
+		.attr({"_walkDir":0})
+		.floorFlag("FLOOR")
+		.bind("EnterFrame",function(){
+			if(this._walkDir == 1)
+				this.walkRight();
+			else if(this._walkDir == -1)
+				this.walkLeft();
+			else
+				this.walkStop();
+			if(this.x <= 40){
+				this._walkDir = 0;
+				setTimeout(function(e){
+					e._walkDir = 1;
+				},1,this);
+			}
+			else if (this.x >= 730){
+				this._walkDir = 0;
+				setTimeout(function(e){
+					e._walkDir = -1;
+				},1,this);
+			}
+			Math.random()*100>98?this.jump():this.attr();
+		})
+}
 
 Crafty.scene("DemoLevel",function(){
 	Crafty.DRAW_SCALE = 64;
@@ -200,6 +362,9 @@ Crafty.scene("DemoLevel",function(){
 		.image("img/bg1.png")
 	
 	Crafty.e("TilesHolder").createMapFromXML("data/map.xml");
+
+	createPlayableCharacter(200,200);
+	//createNpcCharacter(760,200);
 
 });
 
