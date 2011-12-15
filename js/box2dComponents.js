@@ -74,19 +74,19 @@ Crafty.c("ArrayAdd",{
 });
 
 $(document).mousemove(function(e){
-	//if(e.clientX > 800 || e.clientY > 600) return;
+	e.clientX -= Crafty.viewport.x;
 	Crafty("b2dMouse").each(function(){
 		this.mouseMove(e);
 	});
 });
 $(document).mousedown(function(e){
-	//if(e.clientX > 800 || e.clientY > 600) return;
+	e.clientX -= Crafty.viewport.x;
 	Crafty("b2dMouse").each(function(){
 		this.mouseDown(e);
 	});
 });
 $(document).mouseup(function(e){
-	//if(e.clientX > 800 || e.clientY > 600) return;
+	e.clientX -= Crafty.viewport.x;
 	Crafty("b2dMouse").each(function(){
 		this.mouseUp(e);
 	});
@@ -121,20 +121,26 @@ Crafty.c("b2dMouse",{
 	mouseDown:function(e){
 		if(e.clientX > 800 || e.clientY > 600) return;
 		var result = this._getBodyAtMouse(e);
-		if(result != this._body) result = undefined;
-		if(result)
+		var r = true;
+		if(result != this._body) r = false;
+		if(r)
 			e.b2dType = "inside";
-		else
+		else {
 			e.b2dType = "outside";
+			e.b2dBody = result;
+		}
 		this.trigger("MouseDown",e);
 	},
 	mouseUp:function(e){
 		var result = this._getBodyAtMouse(e);
-		if(result != this._body) result = undefined;
-		if(result)
+		var r = true;
+		if(result != this._body) r = false;
+		if(r)
 			e.b2dType = "inside";
-		else
+		else {
 			e.b2dType = "outside";
+			e.b2dBody = result;
+		}
 		this.trigger("MouseUp",e);
 	},
 	mouseMove:function(e){

@@ -72,6 +72,58 @@ elementSprite = {
 	"earth":["spr_earth","spr_rock"]
 }
 
+function createComplexTile(x,y,element){
+	return createUnusableTile(x,y,element);
+	/*var floor = Crafty.e("TILE, FLOOR")
+		.addComponent("b2dObject, b2dSimpleGraphics, b2dCollision, VoxelTile, Canvas")
+		.addComponent(elementSprite[element][0])
+		.attr({"_walls":[]})
+		.attr({x:x,y:y,w:64,h:64})
+		.b2d({
+			body_type:b2Body.b2_staticBody,
+			objects:[{
+				type:"polygon",
+				friction:1,
+				density:1,
+				polys:[[0,0],[64,0],[32,32]]
+			}]
+		})
+		.bind("Remove",function(e){
+			for(i in this._walls){
+				console.log(i,this._walls[i],this._walls);
+				this._walls[i].destroy();
+			}
+		})
+	var wallLeft = Crafty.e("TILE, WALL")
+		.addComponent("b2dObject, b2dCollision, 2D")
+		.attr({x:x,y:y})
+		.b2d({
+			body_type:b2Body.b2_staticBody,
+			objects:[{
+				type:"polygon",
+				friction:1,
+				density:1,
+				polys:[[0,0],[32,32],[32,64],[0,64]]
+			}]
+		})
+		.bind("MouseDown",function(e){floor.trigger("MouseDown",e)})
+	var wallRight = Crafty.e("TILE, WALL")
+		.addComponent("b2dObject, b2dCollision, 2D")
+		.attr({x:x,y:y})
+		.b2d({
+			body_type:b2Body.b2_staticBody,
+			objects:[{
+				type:"polygon",
+				friction:1,
+				density:1,
+				polys:[[32,32],[64,0],[64,64],[32,64]]
+			}]
+		});
+	floor._walls.push(wallLeft);
+	floor._walls.push(wallRight);
+	return floor;*/
+}
+
 function createUnusableTile(x,y,element){
 	return Crafty.e("TILE, FLOOR")
 		.addComponent("b2dObject, b2dSimpleGraphics, b2dCollision, VoxelTile, Canvas")
@@ -90,26 +142,15 @@ function createUnusableTile(x,y,element){
 }
 
 function createUsableTile(x,y,element){
-	return Crafty.e("TILE, FLOOR")
-		.addComponent("b2dObject, b2dSimpleGraphics, b2dCollision, b2dMouse, VoxelTile, ChangeBodyType, Canvas")
-		.addComponent(elementSprite[element][0])
-		.attr({x:x,y:y,w:64,h:64})
-		.b2d({
-			body_type:b2Body.b2_staticBody,
-			objects:[{
-				type:"box",
-				friction:1,
-				density:1,
-				w:64,
-				h:64
-			}]
-		})
+	return createUnusableTile(x,y,element)
+		.addComponent("b2dMouse, ChangeBodyType")
 		.bind("MouseDown",function(e){
-			if(e.b2dType!="inside") return;
-			this.changeToDynamic();
-			this.removeNeighbours();
-			this.unbind("MouseDown");
-			this.addComponent("b2dDraggable");
+			if(e.b2dType=="inside"){
+				this.changeToDynamic();
+				this.removeNeighbours();
+				this.unbind("MouseDown");
+				this.addComponent("b2dDraggable");
+			}
 		})
 		.bind("ChangeToDynamic",function(){
 			this.removeComponent(elementSprite[element][0]);
@@ -176,7 +217,7 @@ Crafty.c("TilesHolder",{
 			if(this._mapData[i].usable == "usable")
 				this._mapTiles[i] = createUsableTile(parseInt(pos[0])*64,parseInt(pos[1])*64,this._mapData[i].element)
 			else
-				this._mapTiles[i] = createUnusableTile(parseInt(pos[0])*64,parseInt(pos[1])*64,this._mapData[i].element);
+				this._mapTiles[i] = createComplexTile(parseInt(pos[0])*64,parseInt(pos[1])*64,this._mapData[i].element);
 		}
 		for(i in this._mapTiles){
 			var pos = i.split("_");
@@ -214,7 +255,13 @@ Crafty.c("CharacterJump",{
 					this._onFloor = true;
 					this.trigger("HitFloor");
 				}
-			});
+			})
+			/*.bind("ContactEnd",function(e){
+				if(e.has(this._floorFlag)){
+					this._onFloor = false;
+					this.trigger("OutFloor");
+				}
+			})*/
 	},
 	onFloor:function(){
 		return this._onFloor;
@@ -230,7 +277,7 @@ Crafty.c("CharacterJump",{
 			var pos = this.body().GetPosition();
 			var vel = this.body().GetLinearVelocity();
 			this.body().SetLinearVelocity(new b2Vec2(vel.x,0));
-			this.body().ApplyImpulse(new b2Vec2(0,-7),this.body().GetWorldCenter());
+			this.body().ApplyImpulse(new b2Vec2(0,-7.3),this.body().GetWorldCenter());
 		}
 	}
 })
@@ -270,9 +317,11 @@ Crafty.c("CharacterMovement",{
 			})
 	},
 	walkLeft:function(){
+		this.walkStop();
 		this._walkLeft = true;
 	},
 	walkRight:function(){
+		this.walkStop();
 		this._walkRight = true;
 	},
 	walkStop:function(){
@@ -319,6 +368,9 @@ function createPlayableCharacter(x,y){
 			if(e.keyCode == 65 || e.keyCode == 68)
 				this.walkStop();
 		})
+		.bind("EnterFrame",function(){
+				msg(this._onFloor);
+			})
 }
 
 function createNpcCharacter(x,y){
@@ -327,21 +379,18 @@ function createNpcCharacter(x,y){
 		.attr({"_walkAction":"walk"})
 		.attr({"_lastFrame":0})
 		.attr({"_skipFrame":100})
-		.floorFlag("FLOOR")
 		.bind("EnterFrame",function(e){
 			if(e.frame - this._skipFrame > this._lastFrame){
 				this._lastFrame = e.frame;
 				this._walkDir = Math.random()*100>50?-1:1;
 				this._walkAction = Math.random()*100>50?"walk":"stop";
-				console.log(this._walkDir,this._walkAction)
-				this.walkStop();
 			}
 			if(this._walkAction ==  "stop"){
 				this.walkStop();
 				return;
 			}
-			if(this.x >= 700){ this.walkStop(); this._walkDir = -1; }
-			if(this.x <= 40){ this.walkStop(); this._walkDir = 1; }
+			if(this.x >= 700) this._walkDir = -1;
+			if(this.x <= 40) this._walkDir = 1;
 			if(this._walkDir == -1) this.walkLeft();
 			if(this._walkDir == 1) this.walkRight();
 			
@@ -372,7 +421,7 @@ Crafty.scene("DemoLevel",function(){
 
 	createPlayableCharacter(200,200);
 	createNpcCharacter(760,200);
-
+	
 });
 
 $(document).ready(function(){
