@@ -251,17 +251,11 @@ Crafty.c("CharacterJump",{
 	init:function(){
 		this.requires("b2dObject")
 			.bind("ContactStart",function(e){
-				if(e.has(this._floorFlag)){
+				if(e.obj.has(this._floorFlag) && e.fixture.m_shape.m_type == 0){
 					this._onFloor = true;
 					this.trigger("HitFloor");
 				}
 			})
-			/*.bind("ContactEnd",function(e){
-				if(e.has(this._floorFlag)){
-					this._onFloor = false;
-					this.trigger("OutFloor");
-				}
-			})*/
 	},
 	onFloor:function(){
 		return this._onFloor;
@@ -420,7 +414,7 @@ Crafty.scene("DemoLevel",function(){
 	Crafty.e("TilesHolder").createMapFromXML("data/map.xml");
 
 	createPlayableCharacter(200,200);
-	createNpcCharacter(760,200);
+	//createNpcCharacter(760,200);
 	
 });
 

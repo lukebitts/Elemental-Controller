@@ -40,8 +40,8 @@ Crafty.c("b2dWorld",{
 			var bodyA = contact.GetFixtureA().GetBody().userData.crafty_entity;
 			var bodyB = contact.GetFixtureB().GetBody().userData.crafty_entity;
 			if(bodyA.has("b2dCollision") && bodyB.has("b2dCollision")){
-				bodyA.contactStart(bodyB);
-				bodyB.contactStart(bodyA);
+				bodyA.contactStart(bodyB,contact.GetFixtureA());
+				bodyB.contactStart(bodyA,contact.GetFixtureB());
 			}
 		}
 		contactListener.EndContact = function(contact){
@@ -52,6 +52,7 @@ Crafty.c("b2dWorld",{
 				bodyB.contactEnd(bodyA);
 			}
 		}
+		console.log(contactListener);
 		this._world.SetContactListener(contactListener);
 		
 		//The main world loop
@@ -202,9 +203,13 @@ Crafty.c("b2dCollision",{
 		this.requires("ArrayAdd")
 			.addArray("_collisionList");
 	},
-	contactStart:function(e){
+	contactStart:function(e,f){
 		this._collisionList.push(e);
-		this.trigger("ContactStart",e);
+		info = {
+			obj:e,
+			fixture:f
+		}
+		this.trigger("ContactStart",info);
 	},
 	contactEnd:function(e){
 		var removeIndex = this._collisionList.indexOf(e);
