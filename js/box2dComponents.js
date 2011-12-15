@@ -48,11 +48,10 @@ Crafty.c("b2dWorld",{
 			var bodyA = contact.GetFixtureA().GetBody().userData.crafty_entity;
 			var bodyB = contact.GetFixtureB().GetBody().userData.crafty_entity;
 			if(bodyA.has("b2dCollision") && bodyB.has("b2dCollision")){
-				bodyA.contactEnd(bodyB);
-				bodyB.contactEnd(bodyA);
+				bodyA.contactEnd(bodyB,contact.GetFixtureA());
+				bodyB.contactEnd(bodyA,contact.GetFixtureB());
 			}
 		}
-		console.log(contactListener);
 		this._world.SetContactListener(contactListener);
 		
 		//The main world loop
@@ -64,13 +63,6 @@ Crafty.c("b2dWorld",{
 	},
 	world:function(){
 		return this._world;
-	}
-});
-
-Crafty.c("ArrayAdd",{
-	addArray:function(name){
-		this[name] = [];
-		return this;
 	}
 });
 
@@ -200,26 +192,35 @@ Crafty.c("b2dDraggable",{
 
 Crafty.c("b2dCollision",{
 	init:function(){
-		this.requires("ArrayAdd")
-			.addArray("_collisionList");
+		this._collisionList = [];
+		this._fixtureList = [];
 	},
 	contactStart:function(e,f){
 		this._collisionList.push(e);
-		info = {
+		this._fixtureList.push(f);
+		info={
 			obj:e,
-			fixture:f
+			fix:f
 		}
 		this.trigger("ContactStart",info);
 	},
-	contactEnd:function(e){
+	contactEnd:function(e,f){
 		var removeIndex = this._collisionList.indexOf(e);
 		this._collisionList.splice(removeIndex);
-		this.trigger("ContactEnd",e);
+		this._fixtureList.splice(removeIndex);
+		info={
+			obj:e,
+			fix:f
+		}
+		this.trigger("ContactEnd",info);
 	},
 	hit:function(component){
 		for(i in this._collisionList){
 			if(this._collisionList[i].has(component))
-				return this._collisionList[i];
+				return info = {
+					obj:this._collisionList[i],
+					fix:this._fixtureList[i]
+				}
 		}
 		return false;
 	}
@@ -253,6 +254,8 @@ Crafty.c("b2dObject",{
 			fixDef.density = obj_args.density || 0;
 			fixDef.friction = obj_args.friction || 0;
 			fixDef.restitution = obj_args.restitution || 0;
+			fixDef.isSensor = obj_args.isSensor || false;
+			fixDef.userData = obj_args.userData || "";
 			
 			if(obj_args.type == "circle"){
 				var r = obj_args.radius/Crafty.DRAW_SCALE/2;
@@ -317,7 +320,6 @@ Crafty.c("b2dJoint",{
 			jointDef.frequencyHz = args.frequencyHz || 0;
 		}
 		else if(args.type == "revolute"){
-			console.log(bodyA);
 			if(bodyA.m_fixtureList.m_density == 0)
 				throw "Body mass should be higher than 0 for a revolute joint";
 			jointDef = new Box2D.Dynamics.Joints.b2RevoluteJointDef();

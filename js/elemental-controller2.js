@@ -73,8 +73,9 @@ elementSprite = {
 }
 
 function createComplexTile(x,y,element){
+	console.warn("DEPRECATED: Use createUnusableTile() for now;")
 	return createUnusableTile(x,y,element);
-	/*var floor = Crafty.e("TILE, FLOOR")
+	var floor = Crafty.e("TILE, FLOOR")
 		.addComponent("b2dObject, b2dSimpleGraphics, b2dCollision, VoxelTile, Canvas")
 		.addComponent(elementSprite[element][0])
 		.attr({"_walls":[]})
@@ -121,7 +122,7 @@ function createComplexTile(x,y,element){
 		});
 	floor._walls.push(wallLeft);
 	floor._walls.push(wallRight);
-	return floor;*/
+	return floor;
 }
 
 function createUnusableTile(x,y,element){
@@ -142,7 +143,7 @@ function createUnusableTile(x,y,element){
 }
 
 function createUsableTile(x,y,element){
-	return createUnusableTile(x,y,element)
+	return createComplexTile(x,y,element)
 		.addComponent("b2dMouse, ChangeBodyType")
 		.bind("MouseDown",function(e){
 			if(e.b2dType=="inside"){
@@ -246,14 +247,19 @@ Crafty.c("TilesHolder",{
 });
 
 Crafty.c("CharacterJump",{
-	_onFloor:false,
+	_onFloor:true,
 	_floorFlag:"",
 	init:function(){
 		this.requires("b2dObject")
-			.bind("ContactStart",function(e){
-				if(e.obj.has(this._floorFlag) && e.fixture.m_shape.m_type == 0){
-					this._onFloor = true;
-					this.trigger("HitFloor");
+			.bind("EnterFrame",function(){
+				var i = this.body().m_contactList;
+				this._onFloor = false;
+				while(i!=null){
+					if(i.contact.m_fixtureA.GetUserData() == "feet" || i.contact.m_fixtureB.GetUserData() == "feet"){
+						this._onFloor = true;
+						return;
+					}
+					i = i.next;
 				}
 			})
 	},
@@ -343,6 +349,14 @@ function createBasicCharacter(x,y){
 				friction:1,
 				radius:32,
 				offY:34
+			},{
+				type:"box",
+				w:16,
+				h:8,
+				offX:8,
+				offY:42,
+				isSensor:true,
+				userData:"feet"
 			}]
 		})
 }
@@ -364,7 +378,7 @@ function createPlayableCharacter(x,y){
 		})
 		.bind("EnterFrame",function(){
 				msg(this._onFloor);
-			})
+		})
 }
 
 function createNpcCharacter(x,y){
