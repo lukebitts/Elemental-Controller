@@ -4,10 +4,6 @@ Math.signum = function(n){
 
 Crafty.c("VoxelTile",{
 	_neighbours:undefined,
-	/*_north:null,
-	_south:null,
-	_east:null,
-	_west:null,*/
 	_getInverseDirection:function(dir){
 		if(dir == "north") return "south";
 		if(dir == "south") return "north";
@@ -342,7 +338,7 @@ function createBasicCharacter(x,y){
 				density:2,
 				friction:0,
 				w:32,
-				h:64,
+				h:64
 			},{
 				type:"circle",
 				density:1,
