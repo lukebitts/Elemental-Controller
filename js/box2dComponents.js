@@ -331,15 +331,18 @@ Crafty.c("b2dJoint",{
 			jointDef = new Box2D.Dynamics.Joints.b2PrismaticJointDef();
 			var worldAxis = args.worldAxis || new b2Vec2(0,0)
 			jointDef.Initialize(bodyA,bodyB,new b2Vec2(aX,aY),worldAxis);
-			jointDef.lowerTranlation = args.lowerTranslation || 0;
+			jointDef.lowerTranslation = args.lowerTranslation || 0;
 			jointDef.upperTranslation = args.upperTranslation || 0;
 			jointDef.enableLimit = args.enableLimit || false;
 			jointDef.maxMotorForce = args.maxMotorForce || 0;
 			jointDef.motorSpeed = args.motorSpeed || 0;
-			jointDef.enableMotor = args.enableMotor || true;
+			jointDef.enableMotor = args.enableMotor || false;
+			jointDef.localAnchorA = args.localAnchorA || new b2Vec2(0,0);
+			jointDef.localAnchorB = args.localAnchorB || new b2Vec2(0,0);
 		}
 		else throw "Undefined joint type: "+args.type;
 		this.joint = this._world.CreateJoint(jointDef);
+		return this;
 	}
 })
 

@@ -423,9 +423,62 @@ Crafty.scene("DemoLevel",function(){
 	
 	Crafty.e("TilesHolder").createMapFromXML("data/map.xml");
 
-	createPlayableCharacter(200,200);
+	//createPlayableCharacter(200,200);
 	//createNpcCharacter(760,200);
 	
+	var body = Crafty.e("b2dObject, b2dDraggable")
+		.attr({x:400,y:400})
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			fixedRotation:true,
+			objects:[{
+				type:"box",
+				w:32,
+				h:64,
+				densisty:1,
+				friction:0.5
+			}]
+		});
+	var feet = Crafty.e("b2dObject, b2dDraggable")
+		.attr({x:408,y:400})
+		.b2d({
+			body_type:b2Body.b2_dynamicBody,
+			objects:[{
+				type:"box",
+				w:16,
+				h:16,
+				density:1,
+				friction:0,
+				restitution:0
+			}]
+		});
+	Crafty.e("b2dJoint, Keyboard")
+		.b2djoint({
+			type:"prismatic",
+			bodyA:feet.body(),
+			bodyB:body.body(),
+			worldAxis:new b2Vec2(0,-1),
+			upperTranslation:1,
+			lowerTranslation:-1,
+			enableLimit:true,
+			maxMotorForce:150,
+			motorSpeed:0,
+			enableMotor:false/*,
+			localAnchorB:new b2Vec2(0.125,0)*/
+		})
+		.bind("EnterFrame",function(e){
+			if(this.joint.m_motorSpeed > 0) this.joint.SetMotorSpeed(0);
+		})
+		.bind("KeyDown",function(e){
+			if(e.keyCode == 87){
+				this.joint.EnableMotor(true);
+				this.joint.SetMotorSpeed(150);
+			}
+		})
+		.bind("KeyUp",function(e){
+			if(e.keyCode == 87)
+				this.joint.EnableMotor(false);
+		})
 });
 
 $(document).ready(function(){
